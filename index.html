@@ -6,422 +6,127 @@
   <title>FitMate 健身打卡</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #111827;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: #111827; min-height: 100vh; display: flex; justify-content: center; align-items: center;
     }
-
-    /* ── 主容器，模拟手机屏幕 ── */
     #app {
-      width: 100%;
-      max-width: 420px;
-      min-height: 100vh;
-      min-height: 100dvh;
-      background: #1f2937;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      width: 100%; max-width: 420px; min-height: 100vh; min-height: 100dvh; background: #1f2937;
+      position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,0,0,0.6);
     }
-
-    /* ── 登录/注册卡片 ── */
     #auth-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 32px 24px;
-      animation: fadeIn 0.4s ease;
+      flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 32px 24px; animation: fadeIn 0.4s ease;
     }
+    #auth-screen.hidden { display: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .auth-card { background: #374151; border-radius: 24px; padding: 32px 24px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
+    .logo-icon { width: 56px; height: 56px; background: #a3e635; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
+    .auth-title { font-size: 24px; font-weight: 700; color: #f9fafb; text-align: center; }
+    .auth-sub { color: #9ca3af; text-align: center; font-size: 14px; margin-top: 4px; margin-bottom: 28px; }
+    .input-label { color: #d1d5db; font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+    .nickname-input { width: 100%; padding: 14px 16px; background: #4b5563; border: 2px solid #6b7280; border-radius: 14px; color: #f9fafb; font-size: 16px; outline: none; transition: border-color 0.2s; }
+    .nickname-input:focus { border-color: #a3e635; }
+    .nickname-input::placeholder { color: #6b7280; }
+    .avatar-label { color: #d1d5db; font-size: 13px; font-weight: 600; margin-top: 24px; margin-bottom: 12px; display: block; }
+    .avatar-grid { display: flex; gap: 16px; justify-content: center; }
+    .avatar-option { width: 64px; height: 64px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+    .avatar-option:hover { border-color: #9ca3af; }
+    .avatar-option.selected { border-color: #a3e635; background: #3f6212; box-shadow: 0 0 16px rgba(163,230,53,0.35); }
+    .btn-start { width: 100%; margin-top: 32px; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .btn-start:hover { background: #84cc16; }
+    .btn-start:active { transform: scale(0.97); }
+    .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    #main-screen { flex: 1; display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+    #main-screen.active { display: flex; }
+    .top-bar { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; background: #1f2937; border-bottom: 1px solid #374151; flex-shrink: 0; }
+    .top-bar-left { display: flex; align-items: center; gap: 10px; }
+    .top-bar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .top-bar-name { color: #f9fafb; font-weight: 600; font-size: 15px; }
+    .top-bar-badge { background: #a3e635; color: #111827; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
+    .content-area { flex: 1; overflow-y: auto; padding: 20px; }
+    .tab-page { display: none; animation: fadeIn 0.3s ease; }
+    .tab-page.active { display: block; }
+    .checkin-card { background: #374151; border-radius: 20px; padding: 24px; margin-bottom: 16px; }
+    .checkin-card h3 { color: #f9fafb; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+    .streak-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .streak-num { font-size: 36px; font-weight: 800; color: #a3e635; }
+    .streak-label { color: #9ca3af; font-size: 13px; }
+    .btn-checkin { width: 100%; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .btn-checkin:active { transform: scale(0.97); }
+    .btn-checkin.done { background: #4b5563; color: #6b7280; cursor: default; }
+    .btn-checkin.done:active { transform: none; }
+    .checkin-time { text-align: center; color: #6b7280; font-size: 13px; margin-top: 8px; }
 
-    #auth-screen.hidden {
-      display: none;
-    }
+    .sport-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .sport-item { background: #4b5563; border-radius: 14px; padding: 12px 4px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+    .sport-item:hover { border-color: #6b7280; }
+    .sport-item.selected { border-color: #a3e635; background: #3f6212; box-shadow: 0 0 12px rgba(163,230,53,0.25); }
+    .sport-item .sport-emoji { font-size: 24px; display: block; line-height: 1.2; }
+    .sport-item .sport-name { font-size: 11px; color: #d1d5db; margin-top: 4px; display: block; font-weight: 500; }
+    .sport-item.selected .sport-name { color: #f9fafb; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .dynamic-form { animation: fadeIn 0.3s ease; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; color: #d1d5db; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 12px 14px; background: #4b5563; border: 2px solid #6b7280; border-radius: 12px; color: #f9fafb; font-size: 15px; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: #a3e635; }
+    .form-input::placeholder { color: #6b7280; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
 
-    .auth-card {
-      background: #374151;
-      border-radius: 24px;
-      padding: 32px 24px;
-      width: 100%;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-    }
+    .body-part-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .body-part-tab { padding: 8px 16px; background: #4b5563; border-radius: 20px; color: #d1d5db; font-size: 13px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+    .body-part-tab:hover { border-color: #6b7280; }
+    .body-part-tab.active { border-color: #a3e635; background: #3f6212; color: #f9fafb; }
 
-    .logo-icon {
-      width: 56px;
-      height: 56px;
-      background: #a3e635;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 28px;
-    }
+    .exercise-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .exercise-card { background: #4b5563; border-radius: 14px; padding: 12px 6px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.25s; user-select: none; }
+    .exercise-card:hover { border-color: #6b7280; }
+    .exercise-card.selected { border-color: #a3e635; background: #3f6212; box-shadow: 0 0 16px rgba(163,230,53,0.3); }
+    .exercise-demo { width: 56px; height: 56px; margin: 0 auto 6px; border-radius: 12px; border: 2px solid #a3e635; background: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 26px; animation: demoPulse 3s ease-in-out infinite; position: relative; overflow: hidden; }
+    @keyframes demoPulse { 0%,100% { box-shadow: 0 0 4px rgba(163,230,53,0.2); transform: scale(1); } 50% { box-shadow: 0 0 16px rgba(163,230,53,0.5); transform: scale(1.04); } }
+    .exercise-demo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(163,230,53,0.08) 0%, transparent 50%); border-radius: 10px; }
+    .exercise-card .exercise-label { font-size: 11px; color: #d1d5db; font-weight: 500; line-height: 1.2; }
+    .exercise-card.selected .exercise-label { color: #f9fafb; }
 
-    .auth-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #f9fafb;
-      text-align: center;
-    }
+    .mood-grid { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+    .mood-item { width: 48px; height: 48px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
+    .mood-item:hover { border-color: #6b7280; }
+    .mood-item.selected { border-color: #a3e635; background: #3f6212; }
 
-    .auth-sub {
-      color: #9ca3af;
-      text-align: center;
-      font-size: 14px;
-      margin-top: 4px;
-      margin-bottom: 28px;
-    }
+    .privacy-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
+    .privacy-toggle span { color: #9ca3af; font-size: 13px; }
+    .toggle-switch { width: 48px; height: 26px; background: #4b5563; border-radius: 13px; cursor: pointer; position: relative; transition: background 0.25s; flex-shrink: 0; }
+    .toggle-switch.active { background: #a3e635; }
+    .toggle-switch::after { content: ''; position: absolute; width: 22px; height: 22px; background: #f9fafb; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.25s; }
+    .toggle-switch.active::after { transform: translateX(22px); }
 
-    .input-label {
-      color: #d1d5db;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: block;
-    }
+    .btn-confirm-checkin { width: 100%; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: background 0.2s, transform 0.15s; margin-top: 8px; }
+    .btn-confirm-checkin:active { transform: scale(0.97); }
+    .btn-confirm-checkin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    .nickname-input {
-      width: 100%;
-      padding: 14px 16px;
-      background: #4b5563;
-      border: 2px solid #6b7280;
-      border-radius: 14px;
-      color: #f9fafb;
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
+    .placeholder-card { background: #374151; border-radius: 20px; padding: 40px 24px; text-align: center; }
+    .placeholder-icon { font-size: 48px; margin-bottom: 16px; }
+    .placeholder-title { color: #f9fafb; font-size: 18px; font-weight: 600; }
+    .placeholder-desc { color: #6b7280; font-size: 14px; margin-top: 6px; }
 
-    .nickname-input:focus {
-      border-color: #a3e635;
-    }
+    .bottom-nav { background: #111827; border-top: 1px solid #374151; display: flex; padding: 6px 0 env(safe-area-inset-bottom, 6px) 0; flex-shrink: 0; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; cursor: pointer; color: #6b7280; transition: color 0.2s; user-select: none; }
+    .nav-item .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-item .nav-label { font-size: 10px; margin-top: 2px; font-weight: 500; }
+    .nav-item.active { color: #a3e635; }
 
-    .nickname-input::placeholder {
-      color: #6b7280;
-    }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #374151; color: #f9fafb; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.4); max-width: 360px; width: calc(100% - 40px); text-align: center; z-index: 999; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
 
-    .avatar-label {
-      color: #d1d5db;
-      font-size: 13px;
-      font-weight: 600;
-      margin-top: 24px;
-      margin-bottom: 12px;
-      display: block;
-    }
-
-    .avatar-grid {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-
-    .avatar-option {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: #4b5563;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      cursor: pointer;
-      border: 3px solid transparent;
-      transition: all 0.2s;
-    }
-
-    .avatar-option:hover {
-      border-color: #9ca3af;
-    }
-
-    .avatar-option.selected {
-      border-color: #a3e635;
-      background: #3f6212;
-      box-shadow: 0 0 16px rgba(163, 230, 53, 0.35);
-    }
-
-    .btn-start {
-      width: 100%;
-      margin-top: 32px;
-      padding: 16px;
-      background: #a3e635;
-      color: #111827;
-      font-size: 17px;
-      font-weight: 700;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-    }
-
-    .btn-start:hover {
-      background: #84cc16;
-    }
-
-    .btn-start:active {
-      transform: scale(0.97);
-    }
-
-    .btn-start:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* ── 主页面 ── */
-    #main-screen {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      min-height: 100vh;
-      min-height: 100dvh;
-    }
-
-    #main-screen.active {
-      display: flex;
-    }
-
-    /* 顶部栏 */
-    .top-bar {
-      padding: 16px 20px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #1f2937;
-      border-bottom: 1px solid #374151;
-    }
-
-    .top-bar-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .top-bar-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #4b5563;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-    }
-
-    .top-bar-name {
-      color: #f9fafb;
-      font-weight: 600;
-      font-size: 15px;
-    }
-
-    .top-bar-badge {
-      background: #a3e635;
-      color: #111827;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 10px;
-      border-radius: 10px;
-    }
-
-    /* ── 内容区域 ── */
-    .content-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-    }
-
-    .tab-page {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .tab-page.active {
-      display: block;
-    }
-
-    /* ── 打卡页 卡片 ── */
-    .checkin-card {
-      background: #374151;
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 16px;
-    }
-
-    .checkin-card h3 {
-      color: #f9fafb;
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .streak-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .streak-num {
-      font-size: 36px;
-      font-weight: 800;
-      color: #a3e635;
-    }
-
-    .streak-label {
-      color: #9ca3af;
-      font-size: 13px;
-    }
-
-    .btn-checkin {
-      width: 100%;
-      padding: 16px;
-      background: #a3e635;
-      color: #111827;
-      font-size: 17px;
-      font-weight: 700;
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
-    }
-
-    .btn-checkin:active {
-      transform: scale(0.97);
-    }
-
-    .btn-checkin.done {
-      background: #4b5563;
-      color: #6b7280;
-      cursor: default;
-    }
-
-    .btn-checkin.done:active {
-      transform: none;
-    }
-
-    .checkin-time {
-      text-align: center;
-      color: #6b7280;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    /* ── 圈子 / 排行榜 / 我的 占位 ── */
-    .placeholder-card {
-      background: #374151;
-      border-radius: 20px;
-      padding: 40px 24px;
-      text-align: center;
-    }
-
-    .placeholder-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-
-    .placeholder-title {
-      color: #f9fafb;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .placeholder-desc {
-      color: #6b7280;
-      font-size: 14px;
-      margin-top: 6px;
-    }
-
-    /* ── 底部导航栏 ── */
-    .bottom-nav {
-      background: #111827;
-      border-top: 1px solid #374151;
-      display: flex;
-      padding: 6px 0 env(safe-area-inset-bottom, 6px) 0;
-      flex-shrink: 0;
-    }
-
-    .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 0;
-      cursor: pointer;
-      color: #6b7280;
-      transition: color 0.2s;
-      user-select: none;
-    }
-
-    .nav-item .nav-icon {
-      font-size: 22px;
-      line-height: 1;
-    }
-
-    .nav-item .nav-label {
-      font-size: 10px;
-      margin-top: 2px;
-      font-weight: 500;
-    }
-
-    .nav-item.active {
-      color: #a3e635;
-    }
-
-    /* ── 提示toast ── */
-    .toast {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-80px);
-      background: #374151;
-      color: #f9fafb;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      max-width: 360px;
-      width: calc(100% - 40px);
-      text-align: center;
-      z-index: 999;
-      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-      pointer-events: none;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* 滚动条 */
-    .content-area::-webkit-scrollbar {
-      width: 4px;
-    }
-    .content-area::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .content-area::-webkit-scrollbar-thumb {
-      background: #4b5563;
-      border-radius: 4px;
-    }
+    .content-area::-webkit-scrollbar { width: 4px; }
+    .content-area::-webkit-scrollbar-track { background: transparent; }
+    .content-area::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
   </style>
 </head>
 <body>
@@ -474,8 +179,9 @@
     <!-- 内容区域 -->
     <div class="content-area" id="contentArea">
 
-      <!-- 打卡页 -->
+      <!-- ====== 打卡页 ====== -->
       <div class="tab-page active" id="page-checkin">
+
         <div class="checkin-card">
           <h3>📅 今日打卡</h3>
           <div class="streak-row">
@@ -488,12 +194,32 @@
           <button class="btn-checkin" id="btnCheckin">✅ 立即打卡</button>
           <div class="checkin-time" id="checkinTime"></div>
         </div>
+
         <div class="checkin-card">
-          <h3>🏆 今日目标</h3>
-          <p style="color:#9ca3af;font-size:14px;">
-            运动 30 分钟 · 喝水 8 杯 · 早睡 🌙
-          </p>
+          <h3>🏋️ 选择运动</h3>
+          <div class="sport-grid" id="sportGrid"></div>
         </div>
+
+        <div class="checkin-card" id="dynamicFormCard" style="display:none;">
+          <h3 id="formTitle">📋 运动详情</h3>
+          <div id="dynamicFormContent"></div>
+        </div>
+
+        <div class="checkin-card" id="extraCard" style="display:none;">
+          <h3>😊 今日状态</h3>
+          <div class="mood-grid" id="moodGrid">
+            <div class="mood-item" data-mood="😄">😄</div>
+            <div class="mood-item" data-mood="😮‍💨">😮‍💨</div>
+            <div class="mood-item" data-mood="💪">💪</div>
+          </div>
+          <div class="privacy-toggle">
+            <span>🔒 仅自己可见</span>
+            <div class="toggle-switch" id="privacyToggle"></div>
+            <span>🌍 所有人可见</span>
+          </div>
+          <button class="btn-confirm-checkin" id="btnConfirmCheckin" disabled>💾 确认打卡</button>
+        </div>
+
       </div>
 
       <!-- 圈子页 -->
@@ -550,127 +276,461 @@
 </div>
 
 <script>
-  (function () {
-    'use strict';
+(function () {
+  'use strict';
 
-    // ── DOM 引用 ──
-    const authScreen    = document.getElementById('auth-screen');
-    const mainScreen    = document.getElementById('main-screen');
-    const nicknameInput = document.getElementById('nickname');
-    const avatarGrid    = document.getElementById('avatarGrid');
-    const btnStart      = document.getElementById('btnStart');
-    const topAvatar     = document.getElementById('topAvatar');
-    const topName       = document.getElementById('topName');
-    const streakNum     = document.getElementById('streakNum');
-    const btnCheckin    = document.getElementById('btnCheckin');
-    const checkinTime   = document.getElementById('checkinTime');
-    const toast         = document.getElementById('toast');
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 1. DATA
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    const navItems = document.querySelectorAll('.nav-item');
-    const tabPages = {
-      checkin: document.getElementById('page-checkin'),
-      circle:  document.getElementById('page-circle'),
-      rank:    document.getElementById('page-rank'),
-      mine:    document.getElementById('page-mine'),
-    };
+  const ALL_SPORTS = [
+    { id: 'running',     name: '跑步',     emoji: '🏃‍♂️', type: 'distance' },
+    { id: 'cycling',     name: '骑行',     emoji: '🚴‍♂️', type: 'distance' },
+    { id: 'swimming',    name: '游泳',     emoji: '🏊‍♂️', type: 'distance' },
+    { id: 'anaerobic',   name: '无氧',     emoji: '🏋️‍♂️', type: 'anaerobic' },
+    { id: 'basketball',  name: '篮球',     emoji: '🏀',   type: 'normal' },
+    { id: 'football',    name: '足球',     emoji: '⚽',   type: 'normal' },
+    { id: 'badminton',   name: '羽毛球',   emoji: '🏸',   type: 'normal' },
+    { id: 'tabletennis', name: '乒乓球',   emoji: '🏓',   type: 'normal' },
+    { id: 'tennis',      name: '网球',     emoji: '🎾',   type: 'normal' },
+    { id: 'jumpRope',    name: '跳绳',     emoji: '🪢',   type: 'normal' },
+    { id: 'dance',       name: '舞蹈',     emoji: '💃',   type: 'normal' },
+    { id: 'climbing',    name: '攀岩',     emoji: '🧗‍♂️', type: 'normal' },
+    { id: 'hiking',      name: '徒步',     emoji: '🥾',   type: 'normal' },
+    { id: 'elliptical',  name: '椭圆机',   emoji: '🌀',   type: 'normal' },
+    { id: 'yoga',        name: '瑜伽',     emoji: '🧘‍♀️', type: 'normal' },
+    { id: 'pilates',     name: '普拉提',   emoji: '🩰',   type: 'normal' },
+    { id: 'skiing',      name: '滑雪',     emoji: '⛷️',   type: 'normal' },
+    { id: 'mixedCardio', name: '混合有氧', emoji: '🫁',   type: 'normal' },
+    { id: 'stairs',      name: '爬楼梯',   emoji: '🪜',   type: 'normal' },
+  ];
 
-    // ── 状态 ──
-    let selectedAvatar = '🏃';
-    let nickname       = '';
-    let isCheckedIn    = false;
-    let streak         = 0;
-    let streakBadge    = document.querySelector('.top-bar-badge');
+  const BODY_PARTS = [
+    { id: 'chest',    label: '练胸' },
+    { id: 'back',     label: '练背' },
+    { id: 'shoulder', label: '练肩' },
+    { id: 'leg',      label: '练腿' },
+    { id: 'glute',    label: '练臀' },
+    { id: 'arm',      label: '练手臂' },
+    { id: 'abs',      label: '练腹' },
+  ];
 
-    // ── Toast ──
-    let toastTimer = null;
-    function showToast(msg) {
-      toast.textContent = msg;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
-    }
+  const EXERCISES = {
+    chest:    [
+      { name: '对角线卧推', emoji: '🏋️' },
+      { name: '哑铃飞鸟',   emoji: '🦅' },
+      { name: '双杠臂屈伸', emoji: '💪' },
+    ],
+    back:     [
+      { name: '高位下拉', emoji: '⬇️' },
+      { name: '杠铃划船', emoji: '🚣' },
+      { name: '引体向上', emoji: '⬆️' },
+    ],
+    shoulder: [
+      { name: '杠铃推举',   emoji: '🏋️' },
+      { name: '哑铃侧平举', emoji: '↔️' },
+      { name: '哑铃前平举', emoji: '➡️' },
+    ],
+    leg:      [
+      { name: '杠铃深蹲', emoji: '🦵' },
+      { name: '腿举',     emoji: '🦿' },
+      { name: '杠铃硬拉', emoji: '🏋️' },
+    ],
+    glute:    [
+      { name: '臀桥',       emoji: '🍑' },
+      { name: '后踢腿',     emoji: '🦶' },
+      { name: '保加利亚蹲', emoji: '🧎' },
+    ],
+    arm:      [
+      { name: '杠铃弯举',     emoji: '💪' },
+      { name: '绳索下压',     emoji: '⬇️' },
+      { name: '哑铃锤式弯举', emoji: '🔨' },
+    ],
+    abs:      [
+      { name: '卷腹',       emoji: '😤' },
+      { name: '悬垂举腿',   emoji: '⬆️' },
+      { name: '俄罗斯转体', emoji: '🔄' },
+    ],
+  };
 
-    // ── 头像选择 ──
-    avatarGrid.querySelectorAll('.avatar-option').forEach(el => {
-      el.addEventListener('click', function () {
-        avatarGrid.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('selected'));
-        this.classList.add('selected');
-        selectedAvatar = this.dataset.avatar;
-        validateForm();
-      });
+  const DISTANCE_IDS = ['running', 'cycling', 'swimming'];
+  const ANAEROBIC_ID = 'anaerobic';
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 2. STATE
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  let selectedSport    = null;
+  let selectedBodyPart = null;
+  let selectedExercise = null;
+  let selectedMood     = '😄';
+  let isPrivate        = false;
+  let isCheckedIn      = false;
+  let streak           = 0;
+  let nickname         = '';
+  let selectedAvatar   = '🏃';
+  let toastTimer      = null;
+
+  // DOM
+  const authScreen    = document.getElementById('auth-screen');
+  const mainScreen    = document.getElementById('main-screen');
+  const nickInput     = document.getElementById('nickname');
+  const avGrid        = document.getElementById('avatarGrid');
+  const btnStart      = document.getElementById('btnStart');
+  const topAvatar     = document.getElementById('topAvatar');
+  const topName       = document.getElementById('topName');
+  const streakNum     = document.getElementById('streakNum');
+  const streakBadge   = document.querySelector('.top-bar-badge');
+  const btnCheckin    = document.getElementById('btnCheckin');
+  const checkinTime   = document.getElementById('checkinTime');
+  const toast         = document.getElementById('toast');
+  const navItems      = document.querySelectorAll('.nav-item');
+  const tabPages = {
+    checkin: document.getElementById('page-checkin'),
+    circle:  document.getElementById('page-circle'),
+    rank:    document.getElementById('page-rank'),
+    mine:    document.getElementById('page-mine'),
+  };
+  const sportGrid        = document.getElementById('sportGrid');
+  const dynFormCard      = document.getElementById('dynamicFormCard');
+  const formTitle        = document.getElementById('formTitle');
+  const dynFormContent   = document.getElementById('dynamicFormContent');
+  const extraCard        = document.getElementById('extraCard');
+  const moodGrid         = document.getElementById('moodGrid');
+  const privToggle       = document.getElementById('privacyToggle');
+  const btnConfirm       = document.getElementById('btnConfirmCheckin');
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 3. UTILITIES
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function show(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+
+  function ls(key, def) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+    catch { return def; }
+  }
+  function lss(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  function getCounts() { return ls('fitmate_sport_counts', {}); }
+  function incCount(id) {
+    const c = getCounts();
+    c[id] = (c[id] || 0) + 1;
+    lss('fitmate_sport_counts', c);
+  }
+  function getCheckins() { return ls('fitmate_checkins', []); }
+  function addCheckin(r) {
+    const list = getCheckins();
+    list.push(r);
+    lss('fitmate_checkins', list);
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 4. RENDER SPORTS (sorted by usage)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function renderSports() {
+    const counts = getCounts();
+    const sorted = [...ALL_SPORTS].sort((a, b) => {
+      const ca = counts[a.id] || 0;
+      const cb = counts[b.id] || 0;
+      return cb - ca || ALL_SPORTS.indexOf(a) - ALL_SPORTS.indexOf(b);
     });
-
-    // ── 昵称输入 ──
-    nicknameInput.addEventListener('input', validateForm);
-
-    function validateForm() {
-      const val = nicknameInput.value.trim();
-      btnStart.disabled = val.length === 0;
-    }
-
-    // ── 登录 ──
-    btnStart.addEventListener('click', function () {
-      nickname = nicknameInput.value.trim();
-      if (!nickname) return;
-
-      topAvatar.textContent = selectedAvatar;
-      topName.textContent   = nickname;
-      streakBadge.textContent = '🔥 连续 0 天';
-
-      authScreen.classList.add('hidden');
-      mainScreen.classList.add('active');
-
-      showToast(`👋 欢迎回来，${nickname}！`);
+    sportGrid.innerHTML = '';
+    sorted.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'sport-item';
+      div.dataset.id = s.id;
+      div.innerHTML = '<span class="sport-emoji">' + s.emoji + '</span><span class="sport-name">' + s.name + '</span>';
+      div.addEventListener('click', function() { pickSport(s); });
+      sportGrid.appendChild(div);
     });
+  }
 
-    // ── 底部导航切换 ──
-    navItems.forEach(item => {
-      item.addEventListener('click', function () {
-        const tab = this.dataset.tab;
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 5. SPORT SELECTION
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-        navItems.forEach(n => n.classList.remove('active'));
-        this.classList.add('active');
+  function pickSport(sport) {
+    selectedSport = sport;
+    selectedBodyPart = null;
+    selectedExercise = null;
 
-        Object.keys(tabPages).forEach(key => {
-          tabPages[key].classList.toggle('active', key === tab);
+    sportGrid.querySelectorAll('.sport-item').forEach(function(el) { el.classList.remove('selected'); });
+    var el = sportGrid.querySelector('[data-id="' + sport.id + '"]');
+    if (el) el.classList.add('selected');
+
+    dynFormCard.style.display = 'block';
+    formTitle.textContent = '📋 ' + sport.emoji + ' ' + sport.name + ' — 运动详情';
+    buildForm(sport);
+    extraCard.style.display = 'block';
+    validate();
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 6. DYNAMIC FORM
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function buildForm(sport) {
+    var t = sport.type;
+    dynFormContent.innerHTML = '';
+
+    if (t === 'distance') {
+      dynFormContent.innerHTML =
+        '<div class="form-row">' +
+          '<div class="form-group">' +
+            '<label>⏱ 运动时长（分钟）</label>' +
+            '<input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" />' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label>📏 运动距离（公里）</label>' +
+            '<input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" />' +
+          '</div>' +
+        '</div>';
+      dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
+    } else if (t === 'anaerobic') {
+      var h = '<div class="body-part-tabs" id="bodyTabs">';
+      for (var i = 0; i < BODY_PARTS.length; i++) {
+        h += '<div class="body-part-tab" data-part="' + BODY_PARTS[i].id + '">' + BODY_PARTS[i].label + '</div>';
+      }
+      h += '</div><div id="anaEx" style="display:none;"></div><div id="anaData" style="display:none;">';
+      h += '<div class="form-row"><div class="form-group"><label>🔢 组数</label><input class="form-input ana-sets" type="number" min="1" max="50" placeholder="例如 4" /></div>';
+      h += '<div class="form-group"><label>🏋️ 每组重量（公斤）</label><input class="form-input ana-weight" type="number" min="0.5" step="0.5" max="999" placeholder="例如 10" /></div></div></div>';
+      dynFormContent.innerHTML = h;
+
+      dynFormContent.querySelectorAll('.body-part-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          dynFormContent.querySelectorAll('.body-part-tab').forEach(function(t) { t.classList.remove('active'); });
+          this.classList.add('active');
+          selectedBodyPart = this.dataset.part;
+          selectedExercise = null;
+          renderEx(selectedBodyPart);
+          var d = document.getElementById('anaData');
+          if (d) d.style.display = 'none';
+          validate();
         });
       });
+      dynFormContent.querySelectorAll('.ana-sets, .ana-weight').forEach(function(el) { el.addEventListener('input', validate); });
+    } else {
+      dynFormContent.innerHTML =
+        '<div class="form-group">' +
+          '<label>⏱ 运动时长（分钟）</label>' +
+          '<input class="form-input norm-dur" type="number" min="1" max="999" placeholder="例如 30" />' +
+        '</div>';
+      dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
+    }
+  }
+
+  function renderEx(partId) {
+    var box = document.getElementById('anaEx');
+    if (!box) return;
+    box.style.display = 'block';
+    var exs = EXERCISES[partId];
+    if (!exs) { box.innerHTML = ''; return; }
+    var h = '<div class="exercise-grid">';
+    for (var i = 0; i < exs.length; i++) {
+      h += '<div class="exercise-card" data-ex="' + exs[i].name + '"><div class="exercise-demo">' + exs[i].emoji + '</div><div class="exercise-label">' + exs[i].name + '</div></div>';
+    }
+    h += '</div>';
+    box.innerHTML = h;
+    box.querySelectorAll('.exercise-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        box.querySelectorAll('.exercise-card').forEach(function(c) { c.classList.remove('selected'); });
+        this.classList.add('selected');
+        selectedExercise = this.dataset.ex;
+        var d = document.getElementById('anaData');
+        if (d) d.style.display = 'block';
+        validate();
+      });
     });
+  }
 
-    // ── 打卡 ──
-    btnCheckin.addEventListener('click', function () {
-      if (isCheckedIn) {
-        showToast('⏰ 今天已经打过卡啦，明天继续！');
-        return;
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 7. VALIDATE & CONFIRM
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function validate() {
+    if (!selectedSport) { btnConfirm.disabled = true; return; }
+    var t = selectedSport.type;
+    var ok = true;
+    if (t === 'distance') {
+      var a = dynFormContent.querySelector('.dist-dur');
+      var b = dynFormContent.querySelector('.dist-dist');
+      if (!a || !b || !a.value || !b.value) ok = false;
+    } else if (t === 'anaerobic') {
+      if (!selectedBodyPart || !selectedExercise) ok = false;
+      if (ok) {
+        var a = dynFormContent.querySelector('.ana-sets');
+        var b = dynFormContent.querySelector('.ana-weight');
+        if (!a || !b || !a.value || !b.value) ok = false;
       }
+    } else {
+      var a = dynFormContent.querySelector('.norm-dur');
+      if (!a || !a.value) ok = false;
+    }
+    btnConfirm.disabled = !ok;
+  }
 
+  btnConfirm.addEventListener('click', function() {
+    if (this.disabled) return;
+    var s = selectedSport;
+    var t = s.type;
+    var r = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      sport: { id: s.id, name: s.name, emoji: s.emoji, type: s.type },
+      mood: selectedMood,
+      isPrivate: isPrivate,
+    };
+    if (t === 'distance') {
+      r.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value);
+      r.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value);
+    } else if (t === 'anaerobic') {
+      r.bodyPart = selectedBodyPart;
+      r.exercise = selectedExercise;
+      r.sets = parseInt(dynFormContent.querySelector('.ana-sets').value);
+      r.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value);
+    } else {
+      r.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value);
+    }
+    addCheckin(r);
+    incCount(s.id);
+
+    if (!isCheckedIn) {
       isCheckedIn = true;
       streak += 1;
       streakNum.textContent = streak;
-      streakBadge.textContent = `🔥 连续 ${streak} 天`;
-
-      const now = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      checkinTime.textContent = `⏱ 今日打卡时间 ${timeStr}`;
-
+      streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+      var now = new Date();
+      var pad = function(n) { return String(n).padStart(2, '0'); };
+      checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
       btnCheckin.textContent = '✅ 已打卡';
       btnCheckin.classList.add('done');
+      lss('fitmate_streak', streak);
+      lss('fitmate_streak_date', new Date().toDateString());
+    }
 
-      showToast(`🎉 打卡成功！已连续 ${streak} 天`);
+    show('🎉 打卡成功！' + s.emoji + ' ' + s.name + ' 已记录');
+    resetForm();
+  });
+
+  function resetForm() {
+    selectedSport = null; selectedBodyPart = null; selectedExercise = null;
+    sportGrid.querySelectorAll('.sport-item').forEach(function(el) { el.classList.remove('selected'); });
+    dynFormCard.style.display = 'none';
+    dynFormContent.innerHTML = '';
+    extraCard.style.display = 'none';
+    btnConfirm.disabled = true;
+    moodGrid.querySelectorAll('.mood-item').forEach(function(el) { el.classList.remove('selected'); });
+    document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
+    selectedMood = '😄';
+    isPrivate = false;
+    privToggle.classList.remove('active');
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 8. MOOD & PRIVACY
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
+    el.addEventListener('click', function() {
+      moodGrid.querySelectorAll('.mood-item').forEach(function(m) { m.classList.remove('selected'); });
+      this.classList.add('selected');
+      selectedMood = this.dataset.mood;
     });
+  });
+  document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
+  privToggle.addEventListener('click', function() {
+    isPrivate = !isPrivate;
+    this.classList.toggle('active', isPrivate);
+  });
 
-    // ── 默认选中第一个头像 ──
-    document.querySelector('.avatar-option').classList.add('selected');
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 9. AUTH
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // ── 键盘 Enter 触发登录 ──
-    nicknameInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !btnStart.disabled) {
-        btnStart.click();
-      }
+  avGrid.querySelectorAll('.avatar-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      avGrid.querySelectorAll('.avatar-option').forEach(function(a) { a.classList.remove('selected'); });
+      this.classList.add('selected');
+      selectedAvatar = this.dataset.avatar;
+      btnStart.disabled = nickInput.value.trim().length === 0;
     });
+  });
+  nickInput.addEventListener('input', function() {
+    btnStart.disabled = this.value.trim().length === 0;
+  });
+  btnStart.addEventListener('click', function() {
+    nickname = nickInput.value.trim();
+    if (!nickname) return;
+    topAvatar.textContent = selectedAvatar;
+    topName.textContent   = nickname;
+    streakBadge.textContent = '🔥 连续 0 天';
+    authScreen.classList.add('hidden');
+    mainScreen.classList.add('active');
+    show('👋 欢迎回来，' + nickname + '！');
+    renderSports();
+  });
+  nickInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !btnStart.disabled) btnStart.click();
+  });
+  document.querySelector('.avatar-option').classList.add('selected');
 
-  })();
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 10. TAB NAVIGATION
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var tab = this.dataset.tab;
+      navItems.forEach(function(n) { n.classList.remove('active'); });
+      this.classList.add('active');
+      Object.keys(tabPages).forEach(function(k) { tabPages[k].classList.toggle('active', k === tab); });
+    });
+  });
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 11. DAILY CHECKIN
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  btnCheckin.addEventListener('click', function() {
+    if (isCheckedIn) { show('⏰ 今天已经打过卡啦，明天继续！'); return; }
+    isCheckedIn = true; streak += 1;
+    streakNum.textContent = streak;
+    streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+    var now = new Date();
+    var pad = function(n) { return String(n).padStart(2, '0'); };
+    checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    btnCheckin.textContent = '✅ 已打卡';
+    btnCheckin.classList.add('done');
+    lss('fitmate_streak', streak);
+    lss('fitmate_streak_date', now.toDateString());
+    show('🎉 打卡成功！已连续 ' + streak + ' 天');
+  });
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 12. RESTORE STREAK
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  var savedStreak = ls('fitmate_streak', 0);
+  var savedDate   = ls('fitmate_streak_date', '');
+  var today       = new Date().toDateString();
+  if (savedDate === today) {
+    streak = savedStreak; isCheckedIn = true;
+    streakNum.textContent = streak;
+    btnCheckin.textContent = '✅ 已打卡';
+    btnCheckin.classList.add('done');
+  }
+
+  console.log('🏋️ FitMate 升级版已加载 — 19种运动 + 无氧多级表单');
+})();
 </script>
 </body>
 </html>
