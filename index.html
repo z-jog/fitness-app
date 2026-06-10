@@ -107,6 +107,75 @@
     .btn-confirm-checkin:active { transform: scale(0.97); }
     .btn-confirm-checkin:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
+    /* ── 圈子 ── 朋友圈卡片 ── */
+    .circle-top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .circle-top-bar h2 { color: #f9fafb; font-size: 20px; font-weight: 700; }
+    .notif-badge-wrap { position: relative; }
+    .notif-badge {
+      position: absolute; top: -6px; right: -10px;
+      background: #ef4444; color: #fff; font-size: 11px; font-weight: 700;
+      min-width: 20px; height: 20px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px; box-shadow: 0 0 8px rgba(239,68,68,0.5);
+      cursor: pointer; transition: transform 0.2s;
+    }
+    .notif-badge:active { transform: scale(0.9); }
+    .notif-badge.hidden { display: none; }
+
+    .post-card { background: #374151; border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .post-author { color: #f9fafb; font-weight: 600; font-size: 14px; }
+    .post-time { color: #6b7280; font-size: 11px; }
+    .post-sport { font-size: 13px; margin: 4px 0 8px; }
+    .post-sport .sport-tag { color: #a3e635; font-weight: 600; }
+    .post-data { color: #9ca3af; font-size: 13px; line-height: 1.6; margin-bottom: 8px; }
+    .post-mood { font-size: 16px; margin-top: 4px; }
+
+    .post-actions { display: flex; gap: 24px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #4b5563; }
+    .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #9ca3af; font-size: 13px; user-select: none; transition: color 0.2s; }
+    .action-btn:active { transform: scale(0.95); }
+    .action-btn.liked { color: #ef4444; }
+    .action-btn.liked .heart-icon { color: #ef4444; }
+
+    .post-comments { margin-top: 10px; border-top: 1px solid #4b5563; padding-top: 8px; }
+    .comment-item { color: #d1d5db; font-size: 13px; padding: 4px 0; line-height: 1.5; cursor: pointer; }
+    .comment-author { color: #a3e635; font-weight: 600; }
+    .comment-reply-to { color: #6b7280; font-weight: 400; }
+    .reply-text { color: #a3e635; font-weight: 600; font-size: 12px; }
+    .comment-text { color: #d1d5db; }
+    .comment-show-btn { color: #6b7280; font-size: 13px; cursor: pointer; margin-top: 4px; }
+    .comment-show-btn:hover { color: #9ca3af; }
+
+    .comment-input-wrap { display: flex; gap: 8px; margin-top: 8px; }
+    .comment-input { flex: 1; padding: 10px 14px; background: #4b5563; border: 2px solid #6b7280; border-radius: 20px; color: #f9fafb; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .comment-input:focus { border-color: #a3e635; }
+    .comment-input::placeholder { color: #6b7280; }
+    .comment-send { width: 36px; height: 36px; border-radius: 50%; background: #a3e635; color: #111827; border: none; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+    .comment-send:active { background: #84cc16; }
+
+    /* ── 通知面板 ── */
+    .notif-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; animation: fadeIn 0.2s ease; }
+    .notif-overlay.show { display: block; }
+    .notif-panel {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+      width: 100%; max-width: 420px; background: rgba(31,41,55,0.92);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-radius: 20px 20px 0 0; z-index: 999; padding: 20px;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      max-height: 70vh; overflow-y: auto;
+    }
+    .notif-panel.show { transform: translateX(-50%) translateY(0); }
+    .notif-panel h3 { color: #f9fafb; font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .notif-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(75,85,99,0.5); color: #d1d5db; font-size: 13px; line-height: 1.5; }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-icon { font-size: 20px; flex-shrink: 0; }
+    .notif-read-all { margin-top: 12px; padding: 10px; background: #a3e635; color: #111827; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+    .notif-read-all:active { background: #84cc16; }
+
+    .nav-dot { position: absolute; top: 2px; right: calc(50% - 22px); width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+    .nav-dot.show { display: block; }
+
     .placeholder-card { background: #374151; border-radius: 20px; padding: 40px 24px; text-align: center; }
     .placeholder-icon { font-size: 48px; margin-bottom: 16px; }
     .placeholder-title { color: #f9fafb; font-size: 18px; font-weight: 600; }
@@ -222,13 +291,15 @@
 
       </div>
 
-      <!-- 圈子页 -->
+      <!-- ====== 圈子页 ====== -->
       <div class="tab-page" id="page-circle">
-        <div class="placeholder-card">
-          <div class="placeholder-icon">🌐</div>
-          <div class="placeholder-title">运动圈子</div>
-          <div class="placeholder-desc">在这里找到志同道合的健身伙伴，一起打卡进步！</div>
+        <div class="circle-top-bar">
+          <h2>🌐 运动圈子</h2>
+          <div class="notif-badge-wrap">
+            <span class="notif-badge hidden" id="notifBadge">0</span>
+          </div>
         </div>
+        <div id="circleFeed"></div>
       </div>
 
       <!-- 排行榜页 -->
@@ -260,6 +331,7 @@
       <div class="nav-item" data-tab="circle">
         <span class="nav-icon">🌐</span>
         <span class="nav-label">圈子</span>
+        <span class="nav-dot" id="navDot"></span>
       </div>
       <div class="nav-item" data-tab="rank">
         <span class="nav-icon">🏅</span>
@@ -273,6 +345,14 @@
 
   </div>
 
+  <!-- ==================== 通知面板 ==================== -->
+  <div class="notif-overlay" id="notifOverlay"></div>
+  <div class="notif-panel" id="notifPanel">
+    <h3>🔔 消息通知</h3>
+    <div id="notifList"></div>
+    <button class="notif-read-all" id="notifReadAll">✔ 一键已读</button>
+  </div>
+
 </div>
 
 <script>
@@ -284,407 +364,426 @@
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   const ALL_SPORTS = [
-    { id: 'running',     name: '跑步',     emoji: '🏃‍♂️', type: 'distance' },
-    { id: 'cycling',     name: '骑行',     emoji: '🚴‍♂️', type: 'distance' },
-    { id: 'swimming',    name: '游泳',     emoji: '🏊‍♂️', type: 'distance' },
-    { id: 'anaerobic',   name: '无氧',     emoji: '🏋️‍♂️', type: 'anaerobic' },
-    { id: 'basketball',  name: '篮球',     emoji: '🏀',   type: 'normal' },
-    { id: 'football',    name: '足球',     emoji: '⚽',   type: 'normal' },
-    { id: 'badminton',   name: '羽毛球',   emoji: '🏸',   type: 'normal' },
-    { id: 'tabletennis', name: '乒乓球',   emoji: '🏓',   type: 'normal' },
-    { id: 'tennis',      name: '网球',     emoji: '🎾',   type: 'normal' },
-    { id: 'jumpRope',    name: '跳绳',     emoji: '🪢',   type: 'normal' },
-    { id: 'dance',       name: '舞蹈',     emoji: '💃',   type: 'normal' },
-    { id: 'climbing',    name: '攀岩',     emoji: '🧗‍♂️', type: 'normal' },
-    { id: 'hiking',      name: '徒步',     emoji: '🥾',   type: 'normal' },
-    { id: 'elliptical',  name: '椭圆机',   emoji: '🌀',   type: 'normal' },
-    { id: 'yoga',        name: '瑜伽',     emoji: '🧘‍♀️', type: 'normal' },
-    { id: 'pilates',     name: '普拉提',   emoji: '🩰',   type: 'normal' },
-    { id: 'skiing',      name: '滑雪',     emoji: '⛷️',   type: 'normal' },
-    { id: 'mixedCardio', name: '混合有氧', emoji: '🫁',   type: 'normal' },
-    { id: 'stairs',      name: '爬楼梯',   emoji: '🪜',   type: 'normal' },
+    { id: 'running', name: '跑步', emoji: '🏃‍♂️', type: 'distance' },
+    { id: 'cycling', name: '骑行', emoji: '🚴‍♂️', type: 'distance' },
+    { id: 'swimming', name: '游泳', emoji: '🏊‍♂️', type: 'distance' },
+    { id: 'anaerobic', name: '无氧', emoji: '🏋️‍♂️', type: 'anaerobic' },
+    { id: 'basketball', name: '篮球', emoji: '🏀', type: 'normal' },
+    { id: 'football', name: '足球', emoji: '⚽', type: 'normal' },
+    { id: 'badminton', name: '羽毛球', emoji: '🏸', type: 'normal' },
+    { id: 'tabletennis', name: '乒乓球', emoji: '🏓', type: 'normal' },
+    { id: 'tennis', name: '网球', emoji: '🎾', type: 'normal' },
+    { id: 'jumpRope', name: '跳绳', emoji: '🪢', type: 'normal' },
+    { id: 'dance', name: '舞蹈', emoji: '💃', type: 'normal' },
+    { id: 'climbing', name: '攀岩', emoji: '🧗‍♂️', type: 'normal' },
+    { id: 'hiking', name: '徒步', emoji: '🥾', type: 'normal' },
+    { id: 'elliptical', name: '椭圆机', emoji: '🌀', type: 'normal' },
+    { id: 'yoga', name: '瑜伽', emoji: '🧘‍♀️', type: 'normal' },
+    { id: 'pilates', name: '普拉提', emoji: '🩰', type: 'normal' },
+    { id: 'skiing', name: '滑雪', emoji: '⛷️', type: 'normal' },
+    { id: 'mixedCardio', name: '混合有氧', emoji: '🫁', type: 'normal' },
+    { id: 'stairs', name: '爬楼梯', emoji: '🪜', type: 'normal' },
   ];
-
   const BODY_PARTS = [
-    { id: 'chest',    label: '练胸' },
-    { id: 'back',     label: '练背' },
-    { id: 'shoulder', label: '练肩' },
-    { id: 'leg',      label: '练腿' },
-    { id: 'glute',    label: '练臀' },
-    { id: 'arm',      label: '练手臂' },
-    { id: 'abs',      label: '练腹' },
+    { id: 'chest', label: '练胸' }, { id: 'back', label: '练背' },
+    { id: 'shoulder', label: '练肩' }, { id: 'leg', label: '练腿' },
+    { id: 'glute', label: '练臀' }, { id: 'arm', label: '练手臂' }, { id: 'abs', label: '练腹' },
   ];
-
   const EXERCISES = {
-    chest:    [
-      { name: '对角线卧推', emoji: '🏋️' },
-      { name: '哑铃飞鸟',   emoji: '🦅' },
-      { name: '双杠臂屈伸', emoji: '💪' },
-    ],
-    back:     [
-      { name: '高位下拉', emoji: '⬇️' },
-      { name: '杠铃划船', emoji: '🚣' },
-      { name: '引体向上', emoji: '⬆️' },
-    ],
-    shoulder: [
-      { name: '杠铃推举',   emoji: '🏋️' },
-      { name: '哑铃侧平举', emoji: '↔️' },
-      { name: '哑铃前平举', emoji: '➡️' },
-    ],
-    leg:      [
-      { name: '杠铃深蹲', emoji: '🦵' },
-      { name: '腿举',     emoji: '🦿' },
-      { name: '杠铃硬拉', emoji: '🏋️' },
-    ],
-    glute:    [
-      { name: '臀桥',       emoji: '🍑' },
-      { name: '后踢腿',     emoji: '🦶' },
-      { name: '保加利亚蹲', emoji: '🧎' },
-    ],
-    arm:      [
-      { name: '杠铃弯举',     emoji: '💪' },
-      { name: '绳索下压',     emoji: '⬇️' },
-      { name: '哑铃锤式弯举', emoji: '🔨' },
-    ],
-    abs:      [
-      { name: '卷腹',       emoji: '😤' },
-      { name: '悬垂举腿',   emoji: '⬆️' },
-      { name: '俄罗斯转体', emoji: '🔄' },
-    ],
+    chest: [ { name: '对角线卧推', emoji: '🏋️' }, { name: '哑铃飞鸟', emoji: '🦅' }, { name: '双杠臂屈伸', emoji: '💪' } ],
+    back: [ { name: '高位下拉', emoji: '⬇️' }, { name: '杠铃划船', emoji: '🚣' }, { name: '引体向上', emoji: '⬆️' } ],
+    shoulder: [ { name: '杠铃推举', emoji: '🏋️' }, { name: '哑铃侧平举', emoji: '↔️' }, { name: '哑铃前平举', emoji: '➡️' } ],
+    leg: [ { name: '杠铃深蹲', emoji: '🦵' }, { name: '腿举', emoji: '🦿' }, { name: '杠铃硬拉', emoji: '🏋️' } ],
+    glute: [ { name: '臀桥', emoji: '🍑' }, { name: '后踢腿', emoji: '🦶' }, { name: '保加利亚蹲', emoji: '🧎' } ],
+    arm: [ { name: '杠铃弯举', emoji: '💪' }, { name: '绳索下压', emoji: '⬇️' }, { name: '哑铃锤式弯举', emoji: '🔨' } ],
+    abs: [ { name: '卷腹', emoji: '😤' }, { name: '悬垂举腿', emoji: '⬆️' }, { name: '俄罗斯转体', emoji: '🔄' } ],
   };
-
-  const DISTANCE_IDS = ['running', 'cycling', 'swimming'];
-  const ANAEROBIC_ID = 'anaerobic';
+  const FAKE_USERS = [
+    { nick: '张三', avatar: '💪' }, { nick: '李四', avatar: '🔥' }, { nick: '王五', avatar: '⚡' },
+    { nick: '赵六', avatar: '🏆' }, { nick: '陈七', avatar: '🎯' }, { nick: '刘八', avatar: '🦁' },
+  ];
+  const FAKE_COMMENTS = ['太牛了老哥！', '加油💪', '一起进步！', '今天状态不错👍', '冲冲冲！', '向你学习！', '帅！', '我也在练这个！'];
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 2. STATE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  let selectedSport    = null;
-  let selectedBodyPart = null;
-  let selectedExercise = null;
-  let selectedMood     = '😄';
-  let isPrivate        = false;
-  let isCheckedIn      = false;
-  let streak           = 0;
-  let nickname         = '';
-  let selectedAvatar   = '🏃';
-  let toastTimer      = null;
+  let selectedSport = null, selectedBodyPart = null, selectedExercise = null;
+  let selectedMood = '😄', isPrivate = false, isCheckedIn = false, streak = 0;
+  let nickname = '', selectedAvatar = '🏃', toastTimer = null, notifTimer = null;
 
   // DOM
-  const authScreen    = document.getElementById('auth-screen');
-  const mainScreen    = document.getElementById('main-screen');
-  const nickInput     = document.getElementById('nickname');
-  const avGrid        = document.getElementById('avatarGrid');
-  const btnStart      = document.getElementById('btnStart');
-  const topAvatar     = document.getElementById('topAvatar');
-  const topName       = document.getElementById('topName');
-  const streakNum     = document.getElementById('streakNum');
-  const streakBadge   = document.querySelector('.top-bar-badge');
-  const btnCheckin    = document.getElementById('btnCheckin');
-  const checkinTime   = document.getElementById('checkinTime');
-  const toast         = document.getElementById('toast');
-  const navItems      = document.querySelectorAll('.nav-item');
-  const tabPages = {
-    checkin: document.getElementById('page-checkin'),
-    circle:  document.getElementById('page-circle'),
-    rank:    document.getElementById('page-rank'),
-    mine:    document.getElementById('page-mine'),
-  };
-  const sportGrid        = document.getElementById('sportGrid');
-  const dynFormCard      = document.getElementById('dynamicFormCard');
-  const formTitle        = document.getElementById('formTitle');
-  const dynFormContent   = document.getElementById('dynamicFormContent');
-  const extraCard        = document.getElementById('extraCard');
-  const moodGrid         = document.getElementById('moodGrid');
-  const privToggle       = document.getElementById('privacyToggle');
-  const btnConfirm       = document.getElementById('btnConfirmCheckin');
+  const $ = function(id) { return document.getElementById(id); };
+  const authScreen = $('auth-screen'), mainScreen = $('main-screen');
+  const nickInput = $('nickname'), avGrid = $('avatarGrid'), btnStart = $('btnStart');
+  const topAvatar = $('topAvatar'), topName = $('topName'), streakNum = $('streakNum');
+  const streakBadge = document.querySelector('.top-bar-badge');
+  const btnCheckin = $('btnCheckin'), checkinTime = $('checkinTime'), toast = $('toast');
+  const navItems = document.querySelectorAll('.nav-item');
+  const tabPages = { checkin: $('page-checkin'), circle: $('page-circle'), rank: $('page-rank'), mine: $('page-mine') };
+  const sportGrid = $('sportGrid'), dynFormCard = $('dynamicFormCard'), formTitle = $('formTitle');
+  const dynFormContent = $('dynamicFormContent'), extraCard = $('extraCard'), moodGrid = $('moodGrid');
+  const privToggle = $('privacyToggle'), btnConfirm = $('btnConfirmCheckin');
+  const circleFeed = $('circleFeed'), notifBadge = $('notifBadge'), navDot = $('navDot');
+  const notifOverlay = $('notifOverlay'), notifPanel = $('notifPanel'), notifList = $('notifList'), notifReadAll = $('notifReadAll');
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 3. UTILITIES
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  function show(msg) {
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
-  }
-
-  function ls(key, def) {
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
-    catch { return def; }
-  }
-  function lss(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-  }
-
+  function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2400); }
+  function ls(key, def) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } }
+  function lss(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
   function getCounts() { return ls('fitmate_sport_counts', {}); }
-  function incCount(id) {
-    const c = getCounts();
-    c[id] = (c[id] || 0) + 1;
-    lss('fitmate_sport_counts', c);
+  function incCount(id) { var c = getCounts(); c[id] = (c[id] || 0) + 1; lss('fitmate_sport_counts', c); }
+  function getPosts() { return ls('fitmate_posts', []); }
+  function savePosts(list) { lss('fitmate_posts', list); }
+  function getNotifs() { return ls('fitmate_notifs', []); }
+  function saveNotifs(list) { lss('fitmate_notifs', list); }
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function randItem(arr) { return arr[rand(0, arr.length - 1)]; }
+  function fmt(iso) { var d = new Date(iso); var p = function(n) { return String(n).padStart(2, '0'); }; return p(d.getMonth()+1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 4. NOTIFICATIONS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function updateNotifUI() {
+    var n = getNotifs(), unread = 0;
+    for (var i = 0; i < n.length; i++) { if (!n[i].read) unread++; }
+    if (unread > 0) {
+      notifBadge.textContent = unread > 99 ? '99+' : unread; notifBadge.classList.remove('hidden');
+      navDot.classList.add('show');
+    } else { notifBadge.classList.add('hidden'); navDot.classList.remove('show'); }
   }
-  function getCheckins() { return ls('fitmate_checkins', []); }
-  function addCheckin(r) {
-    const list = getCheckins();
-    list.push(r);
-    lss('fitmate_checkins', list);
+
+  function renderNotifPanel() {
+    var n = getNotifs();
+    if (n.length === 0) { notifList.innerHTML = '<div class="notif-item" style="justify-content:center;color:#6b7280;">暂无消息</div>'; return; }
+    var h = '';
+    for (var i = 0; i < n.length; i++) {
+      h += '<div class="notif-item"><span class="notif-icon">' + (n[i].type === 'like' ? '❤️' : '💬') + '</span><div>' + n[i].text + '<div style="color:#6b7280;font-size:11px;margin-top:2px;">' + fmt(n[i].timestamp) + '</div></div></div>';
+    }
+    notifList.innerHTML = h;
+  }
+
+  function simulateNotif() {
+    var posts = getPosts();
+    if (posts.length < 1 || !nickname) return;
+    var fakeUser = randItem(FAKE_USERS);
+    var type = Math.random() < 0.6 ? 'like' : 'comment';
+    var text = type === 'like' ? fakeUser.nick + ' 点赞了你的打卡' : fakeUser.nick + ' 回复了你的评论：「' + randItem(FAKE_COMMENTS) + '」';
+    var notifs = getNotifs();
+    notifs.unshift({ id: Date.now(), type: type, text: text, timestamp: new Date().toISOString(), read: false });
+    saveNotifs(notifs);
+    updateNotifUI();
+  }
+
+  notifBadge.addEventListener('click', function() { notifPanel.classList.add('show'); notifOverlay.classList.add('show'); renderNotifPanel(); });
+  notifOverlay.addEventListener('click', function() { notifPanel.classList.remove('show'); notifOverlay.classList.remove('show'); });
+  notifReadAll.addEventListener('click', function() {
+    var n = getNotifs();
+    for (var i = 0; i < n.length; i++) n[i].read = true;
+    saveNotifs(n); updateNotifUI(); renderNotifPanel();
+    notifPanel.classList.remove('show'); notifOverlay.classList.remove('show');
+    show('📬 所有消息已读');
+  });
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 5. CIRCLE FEED
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  function renderCircle() {
+    var posts = getPosts();
+    if (posts.length === 0) {
+      circleFeed.innerHTML = '<div class="placeholder-card"><div class="placeholder-icon">📭</div><div class="placeholder-title">暂无动态</div><div class="placeholder-desc">快去打卡，让好友看到你的运动成果吧！</div></div>';
+      return;
+    }
+    var h = '';
+    for (var i = 0; i < posts.length; i++) {
+      var p = posts[i], likesCount = (p.likes ? p.likes.length : 0), commentsCount = (p.comments ? p.comments.length : 0);
+      var isLiked = p.likes && p.likes.indexOf(nickname) !== -1;
+      var moodEmoji = p.mood || '😄', sport = p.sport || {};
+      h += '<div class="post-card" data-pid="' + p.id + '">';
+      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.author || '用户') + '</div><div class="post-time">' + fmt(p.timestamp) + '</div></div></div>';
+      h += '<div class="post-sport"><span class="sport-tag">' + (sport.emoji || '🏋️') + ' ' + (sport.name || '运动') + '</span></div>';
+      h += '<div class="post-data">';
+      if (p.duration) h += '⏱ 时长：' + p.duration + ' 分钟<br>';
+      if (p.distance) h += '📏 距离：' + p.distance + ' 公里<br>';
+      if (p.bodyPart && p.exercise) h += '🏋️ 部位：' + p.bodyPart + ' · 动作：' + p.exercise + '<br>';
+      if (p.sets && p.weightPerSet) h += '🔢 ' + p.sets + ' 组 × ' + p.weightPerSet + ' 公斤<br>';
+      h += '</div>';
+      if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
+      h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
+      h += '<div class="action-btn" data-act="comment"><span>💬</span> 评论 ' + commentsCount + '</div></div>';
+
+      if (p.comments && p.comments.length > 0) {
+        h += '<div class="post-comments">';
+        var shown = p.comments.slice(0, 3);
+        for (var ci = 0; ci < shown.length; ci++) {
+          var c = shown[ci];
+          h += '<div class="comment-item" data-cid="' + c.id + '"><span class="comment-author">' + c.author + '</span>';
+          if (c.replyTo && c.replyTo !== c.author) h += ' <span class="comment-reply-to">回复</span> <span class="reply-text">' + c.replyTo + '</span>';
+          h += '：<span class="comment-text">' + c.text + '</span></div>';
+        }
+        if (p.comments.length > 3) h += '<div class="comment-show-btn" data-more="' + p.id + '">查看全部 ' + p.comments.length + ' 条评论 ▾</div>';
+        h += '</div>';
+      }
+      h += '<div class="comment-input-wrap" data-pid="' + p.id + '"><input class="comment-input" type="text" placeholder="说点什么..." maxlength="80" /><button class="comment-send">➤</button></div></div>';
+    }
+    circleFeed.innerHTML = h;
+    bindCircleEvents();
+  }
+
+  function bindCircleEvents() {
+    circleFeed.querySelectorAll('[data-act="like"]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var card = this.closest('.post-card'), pid = parseInt(card.dataset.pid);
+        var posts = getPosts();
+        for (var i = 0; i < posts.length; i++) {
+          if (posts[i].id === pid) {
+            if (!posts[i].likes) posts[i].likes = [];
+            var idx = posts[i].likes.indexOf(nickname);
+            if (idx === -1) posts[i].likes.push(nickname); else posts[i].likes.splice(idx, 1);
+            savePosts(posts); renderCircle(); return;
+          }
+        }
+      });
+    });
+    circleFeed.querySelectorAll('.comment-send').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var wrap = this.closest('.comment-input-wrap'), input = wrap.querySelector('.comment-input');
+        var pid = parseInt(wrap.dataset.pid), text = input.value.trim();
+        if (!text) return;
+        var replyTo = null, pl = input.placeholder;
+        if (pl.indexOf('回复 @') === 0) replyTo = pl.replace('回复 @', '').replace(':', '');
+        var posts = getPosts();
+        for (var i = 0; i < posts.length; i++) {
+          if (posts[i].id === pid) {
+            if (!posts[i].comments) posts[i].comments = [];
+            posts[i].comments.push({ id: Date.now(), author: nickname, text: text, replyTo: replyTo, timestamp: new Date().toISOString() });
+            savePosts(posts); renderCircle(); simulateNotif(); return;
+          }
+        }
+      });
+    });
+    circleFeed.querySelectorAll('.comment-input').forEach(function(el) {
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { this.closest('.comment-input-wrap').querySelector('.comment-send').click(); } });
+    });
+    circleFeed.querySelectorAll('.comment-show-btn').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var pid = parseInt(this.dataset.more);
+        var posts = getPosts();
+        for (var i = 0; i < posts.length; i++) {
+          if (posts[i].id === pid) { renderCircleFull(pid); return; }
+        }
+      });
+    });
+    circleFeed.querySelectorAll('.comment-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var cid = parseInt(this.dataset.cid), card = this.closest('.post-card');
+        var wrap = card.querySelector('.comment-input-wrap'), input = wrap.querySelector('.comment-input');
+        var pid = parseInt(card.dataset.pid), posts = getPosts();
+        for (var i = 0; i < posts.length; i++) {
+          if (posts[i].id === pid) {
+            var comments = posts[i].comments || [];
+            for (var j = 0; j < comments.length; j++) {
+              if (comments[j].id === cid) { input.placeholder = '回复 @' + comments[j].author + ':'; input.focus(); return; }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  function renderCircleFull(showPid) {
+    var posts = getPosts(), h = '';
+    for (var i = 0; i < posts.length; i++) {
+      var p = posts[i], showAll = (p.id === showPid);
+      var likesCount = (p.likes ? p.likes.length : 0), commentsCount = (p.comments ? p.comments.length : 0);
+      var isLiked = p.likes && p.likes.indexOf(nickname) !== -1, moodEmoji = p.mood || '😄', sport = p.sport || {};
+      h += '<div class="post-card" data-pid="' + p.id + '">';
+      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.author || '用户') + '</div><div class="post-time">' + fmt(p.timestamp) + '</div></div></div>';
+      h += '<div class="post-sport"><span class="sport-tag">' + (sport.emoji || '🏋️') + ' ' + (sport.name || '运动') + '</span></div>';
+      h += '<div class="post-data">';
+      if (p.duration) h += '⏱ 时长：' + p.duration + ' 分钟<br>';
+      if (p.distance) h += '📏 距离：' + p.distance + ' 公里<br>';
+      if (p.bodyPart && p.exercise) h += '🏋️ 部位：' + p.bodyPart + ' · 动作：' + p.exercise + '<br>';
+      if (p.sets && p.weightPerSet) h += '🔢 ' + p.sets + ' 组 × ' + p.weightPerSet + ' 公斤<br>';
+      h += '</div>';
+      if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
+      h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
+      h += '<div class="action-btn" data-act="comment"><span>💬</span> 评论 ' + commentsCount + '</div></div>';
+      if (p.comments && p.comments.length > 0) {
+        h += '<div class="post-comments">';
+        var shown = showAll ? p.comments : p.comments.slice(0, 3);
+        for (var ci = 0; ci < shown.length; ci++) {
+          var c = shown[ci];
+          h += '<div class="comment-item" data-cid="' + c.id + '"><span class="comment-author">' + c.author + '</span>';
+          if (c.replyTo && c.replyTo !== c.author) h += ' <span class="comment-reply-to">回复</span> <span class="reply-text">' + c.replyTo + '</span>';
+          h += '：<span class="comment-text">' + c.text + '</span></div>';
+        }
+        if (!showAll && p.comments.length > 3) h += '<div class="comment-show-btn" data-more="' + p.id + '">查看全部 ' + p.comments.length + ' 条评论 ▾</div>';
+        h += '</div>';
+      }
+      h += '<div class="comment-input-wrap" data-pid="' + p.id + '"><input class="comment-input" type="text" placeholder="说点什么..." maxlength="80" /><button class="comment-send">➤</button></div></div>';
+    }
+    circleFeed.innerHTML = h;
+    bindCircleEvents();
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 4. RENDER SPORTS (sorted by usage)
+  // 6. CHECK-IN (preserved)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function renderSports() {
-    const counts = getCounts();
-    const sorted = [...ALL_SPORTS].sort((a, b) => {
-      const ca = counts[a.id] || 0;
-      const cb = counts[b.id] || 0;
-      return cb - ca || ALL_SPORTS.indexOf(a) - ALL_SPORTS.indexOf(b);
-    });
+    var counts = getCounts();
+    var sorted = [...ALL_SPORTS].sort(function(a, b) { var ca = counts[a.id] || 0, cb = counts[b.id] || 0; return cb - ca || ALL_SPORTS.indexOf(a) - ALL_SPORTS.indexOf(b); });
     sportGrid.innerHTML = '';
-    sorted.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'sport-item';
-      div.dataset.id = s.id;
+    sorted.forEach(function(s) {
+      var div = document.createElement('div'); div.className = 'sport-item'; div.dataset.id = s.id;
       div.innerHTML = '<span class="sport-emoji">' + s.emoji + '</span><span class="sport-name">' + s.name + '</span>';
-      div.addEventListener('click', function() { pickSport(s); });
-      sportGrid.appendChild(div);
+      div.addEventListener('click', function() { pickSport(s); }); sportGrid.appendChild(div);
     });
   }
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 5. SPORT SELECTION
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function pickSport(sport) {
-    selectedSport = sport;
-    selectedBodyPart = null;
-    selectedExercise = null;
-
+    selectedSport = sport; selectedBodyPart = null; selectedExercise = null;
     sportGrid.querySelectorAll('.sport-item').forEach(function(el) { el.classList.remove('selected'); });
-    var el = sportGrid.querySelector('[data-id="' + sport.id + '"]');
-    if (el) el.classList.add('selected');
-
-    dynFormCard.style.display = 'block';
-    formTitle.textContent = '📋 ' + sport.emoji + ' ' + sport.name + ' — 运动详情';
-    buildForm(sport);
-    extraCard.style.display = 'block';
-    validate();
+    var el = sportGrid.querySelector('[data-id="' + sport.id + '"]'); if (el) el.classList.add('selected');
+    dynFormCard.style.display = 'block'; formTitle.textContent = '📋 ' + sport.emoji + ' ' + sport.name + ' — 运动详情';
+    buildForm(sport); extraCard.style.display = 'block'; validate();
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 6. DYNAMIC FORM
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
   function buildForm(sport) {
-    var t = sport.type;
-    dynFormContent.innerHTML = '';
-
+    var t = sport.type; dynFormContent.innerHTML = '';
     if (t === 'distance') {
-      dynFormContent.innerHTML =
-        '<div class="form-row">' +
-          '<div class="form-group">' +
-            '<label>⏱ 运动时长（分钟）</label>' +
-            '<input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" />' +
-          '</div>' +
-          '<div class="form-group">' +
-            '<label>📏 运动距离（公里）</label>' +
-            '<input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" />' +
-          '</div>' +
-        '</div>';
+      dynFormContent.innerHTML = '<div class="form-row"><div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" /></div><div class="form-group"><label>📏 运动距离（公里）</label><input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" /></div></div>';
       dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     } else if (t === 'anaerobic') {
       var h = '<div class="body-part-tabs" id="bodyTabs">';
-      for (var i = 0; i < BODY_PARTS.length; i++) {
-        h += '<div class="body-part-tab" data-part="' + BODY_PARTS[i].id + '">' + BODY_PARTS[i].label + '</div>';
-      }
+      for (var i = 0; i < BODY_PARTS.length; i++) h += '<div class="body-part-tab" data-part="' + BODY_PARTS[i].id + '">' + BODY_PARTS[i].label + '</div>';
       h += '</div><div id="anaEx" style="display:none;"></div><div id="anaData" style="display:none;">';
       h += '<div class="form-row"><div class="form-group"><label>🔢 组数</label><input class="form-input ana-sets" type="number" min="1" max="50" placeholder="例如 4" /></div>';
       h += '<div class="form-group"><label>🏋️ 每组重量（公斤）</label><input class="form-input ana-weight" type="number" min="0.5" step="0.5" max="999" placeholder="例如 10" /></div></div></div>';
       dynFormContent.innerHTML = h;
-
       dynFormContent.querySelectorAll('.body-part-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
           dynFormContent.querySelectorAll('.body-part-tab').forEach(function(t) { t.classList.remove('active'); });
-          this.classList.add('active');
-          selectedBodyPart = this.dataset.part;
-          selectedExercise = null;
-          renderEx(selectedBodyPart);
-          var d = document.getElementById('anaData');
-          if (d) d.style.display = 'none';
-          validate();
+          this.classList.add('active'); selectedBodyPart = this.dataset.part; selectedExercise = null;
+          renderEx(selectedBodyPart); var d = $('anaData'); if (d) d.style.display = 'none'; validate();
         });
       });
       dynFormContent.querySelectorAll('.ana-sets, .ana-weight').forEach(function(el) { el.addEventListener('input', validate); });
     } else {
-      dynFormContent.innerHTML =
-        '<div class="form-group">' +
-          '<label>⏱ 运动时长（分钟）</label>' +
-          '<input class="form-input norm-dur" type="number" min="1" max="999" placeholder="例如 30" />' +
-        '</div>';
+      dynFormContent.innerHTML = '<div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input norm-dur" type="number" min="1" max="999" placeholder="例如 30" /></div>';
       dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     }
   }
 
   function renderEx(partId) {
-    var box = document.getElementById('anaEx');
-    if (!box) return;
-    box.style.display = 'block';
-    var exs = EXERCISES[partId];
-    if (!exs) { box.innerHTML = ''; return; }
+    var box = $('anaEx'); if (!box) return; box.style.display = 'block';
+    var exs = EXERCISES[partId]; if (!exs) { box.innerHTML = ''; return; }
     var h = '<div class="exercise-grid">';
-    for (var i = 0; i < exs.length; i++) {
-      h += '<div class="exercise-card" data-ex="' + exs[i].name + '"><div class="exercise-demo">' + exs[i].emoji + '</div><div class="exercise-label">' + exs[i].name + '</div></div>';
-    }
-    h += '</div>';
-    box.innerHTML = h;
+    for (var i = 0; i < exs.length; i++) h += '<div class="exercise-card" data-ex="' + exs[i].name + '"><div class="exercise-demo">' + exs[i].emoji + '</div><div class="exercise-label">' + exs[i].name + '</div></div>';
+    h += '</div>'; box.innerHTML = h;
     box.querySelectorAll('.exercise-card').forEach(function(card) {
       card.addEventListener('click', function() {
         box.querySelectorAll('.exercise-card').forEach(function(c) { c.classList.remove('selected'); });
-        this.classList.add('selected');
-        selectedExercise = this.dataset.ex;
-        var d = document.getElementById('anaData');
-        if (d) d.style.display = 'block';
-        validate();
+        this.classList.add('selected'); selectedExercise = this.dataset.ex;
+        var d = $('anaData'); if (d) d.style.display = 'block'; validate();
       });
     });
   }
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 7. VALIDATE & CONFIRM
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
   function validate() {
     if (!selectedSport) { btnConfirm.disabled = true; return; }
-    var t = selectedSport.type;
-    var ok = true;
-    if (t === 'distance') {
-      var a = dynFormContent.querySelector('.dist-dur');
-      var b = dynFormContent.querySelector('.dist-dist');
-      if (!a || !b || !a.value || !b.value) ok = false;
-    } else if (t === 'anaerobic') {
-      if (!selectedBodyPart || !selectedExercise) ok = false;
-      if (ok) {
-        var a = dynFormContent.querySelector('.ana-sets');
-        var b = dynFormContent.querySelector('.ana-weight');
-        if (!a || !b || !a.value || !b.value) ok = false;
-      }
-    } else {
-      var a = dynFormContent.querySelector('.norm-dur');
-      if (!a || !a.value) ok = false;
-    }
+    var t = selectedSport.type, ok = true;
+    if (t === 'distance') { var a = dynFormContent.querySelector('.dist-dur'), b = dynFormContent.querySelector('.dist-dist'); if (!a || !b || !a.value || !b.value) ok = false; }
+    else if (t === 'anaerobic') { if (!selectedBodyPart || !selectedExercise) ok = false; if (ok) { var a = dynFormContent.querySelector('.ana-sets'), b = dynFormContent.querySelector('.ana-weight'); if (!a || !b || !a.value || !b.value) ok = false; } }
+    else { var a = dynFormContent.querySelector('.norm-dur'); if (!a || !a.value) ok = false; }
     btnConfirm.disabled = !ok;
   }
 
   btnConfirm.addEventListener('click', function() {
-    if (this.disabled) return;
-    var s = selectedSport;
-    var t = s.type;
-    var r = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      sport: { id: s.id, name: s.name, emoji: s.emoji, type: s.type },
-      mood: selectedMood,
-      isPrivate: isPrivate,
-    };
-    if (t === 'distance') {
-      r.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value);
-      r.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value);
-    } else if (t === 'anaerobic') {
-      r.bodyPart = selectedBodyPart;
-      r.exercise = selectedExercise;
-      r.sets = parseInt(dynFormContent.querySelector('.ana-sets').value);
-      r.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value);
-    } else {
-      r.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value);
+    if (this.disabled) return; var s = selectedSport, t = s.type;
+    var r = { id: Date.now(), timestamp: new Date().toISOString(), sport: { id: s.id, name: s.name, emoji: s.emoji, type: s.type }, mood: selectedMood, isPrivate: isPrivate };
+    if (t === 'distance') { r.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value); r.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value); }
+    else if (t === 'anaerobic') { r.bodyPart = selectedBodyPart; r.exercise = selectedExercise; r.sets = parseInt(dynFormContent.querySelector('.ana-sets').value); r.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value); }
+    else { r.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value); }
+    var list = ls('fitmate_checkins', []); list.push(r); lss('fitmate_checkins', list); incCount(s.id);
+    if (!r.isPrivate) {
+      var post = { id: r.id, timestamp: r.timestamp, author: nickname, avatar: selectedAvatar, sport: r.sport, mood: r.mood, duration: r.duration, distance: r.distance, bodyPart: r.bodyPart, exercise: r.exercise, sets: r.sets, weightPerSet: r.weightPerSet, likes: [], comments: [] };
+      var posts = getPosts(); posts.unshift(post); savePosts(posts); renderCircle();
     }
-    addCheckin(r);
-    incCount(s.id);
-
     if (!isCheckedIn) {
-      isCheckedIn = true;
-      streak += 1;
-      streakNum.textContent = streak;
-      streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-      var now = new Date();
-      var pad = function(n) { return String(n).padStart(2, '0'); };
+      isCheckedIn = true; streak += 1; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+      var now = new Date(), pad = function(n) { return String(n).padStart(2, '0'); };
       checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-      btnCheckin.textContent = '✅ 已打卡';
-      btnCheckin.classList.add('done');
-      lss('fitmate_streak', streak);
-      lss('fitmate_streak_date', new Date().toDateString());
+      btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+      lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
     }
-
     show('🎉 打卡成功！' + s.emoji + ' ' + s.name + ' 已记录');
-    resetForm();
+    simulateNotif(); resetForm();
   });
 
   function resetForm() {
     selectedSport = null; selectedBodyPart = null; selectedExercise = null;
     sportGrid.querySelectorAll('.sport-item').forEach(function(el) { el.classList.remove('selected'); });
-    dynFormCard.style.display = 'none';
-    dynFormContent.innerHTML = '';
-    extraCard.style.display = 'none';
-    btnConfirm.disabled = true;
+    dynFormCard.style.display = 'none'; dynFormContent.innerHTML = '';
+    extraCard.style.display = 'none'; btnConfirm.disabled = true;
     moodGrid.querySelectorAll('.mood-item').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-    selectedMood = '😄';
-    isPrivate = false;
-    privToggle.classList.remove('active');
+    selectedMood = '😄'; isPrivate = false; privToggle.classList.remove('active');
   }
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 8. MOOD & PRIVACY
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
     el.addEventListener('click', function() {
       moodGrid.querySelectorAll('.mood-item').forEach(function(m) { m.classList.remove('selected'); });
-      this.classList.add('selected');
-      selectedMood = this.dataset.mood;
+      this.classList.add('selected'); selectedMood = this.dataset.mood;
     });
   });
   document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-  privToggle.addEventListener('click', function() {
-    isPrivate = !isPrivate;
-    this.classList.toggle('active', isPrivate);
-  });
+  privToggle.addEventListener('click', function() { isPrivate = !isPrivate; this.classList.toggle('active', isPrivate); });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 9. AUTH
+  // 7. AUTH
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   avGrid.querySelectorAll('.avatar-option').forEach(function(el) {
     el.addEventListener('click', function() {
       avGrid.querySelectorAll('.avatar-option').forEach(function(a) { a.classList.remove('selected'); });
-      this.classList.add('selected');
-      selectedAvatar = this.dataset.avatar;
+      this.classList.add('selected'); selectedAvatar = this.dataset.avatar;
       btnStart.disabled = nickInput.value.trim().length === 0;
     });
   });
-  nickInput.addEventListener('input', function() {
-    btnStart.disabled = this.value.trim().length === 0;
-  });
+  nickInput.addEventListener('input', function() { btnStart.disabled = this.value.trim().length === 0; });
+
   btnStart.addEventListener('click', function() {
-    nickname = nickInput.value.trim();
-    if (!nickname) return;
-    topAvatar.textContent = selectedAvatar;
-    topName.textContent   = nickname;
-    streakBadge.textContent = '🔥 连续 0 天';
-    authScreen.classList.add('hidden');
-    mainScreen.classList.add('active');
-    show('👋 欢迎回来，' + nickname + '！');
-    renderSports();
+    nickname = nickInput.value.trim(); if (!nickname) return;
+    topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
+    var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString();
+    if (savedDateLogin === todayLogin) {
+      streak = savedStreakLogin; isCheckedIn = true; streakNum.textContent = streak;
+      streakBadge.textContent = '🔥 连续 ' + streak + ' 天'; btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+      checkinTime.textContent = '⏱ 今日已打卡 ✅';
+    } else if (savedDateLogin && savedStreakLogin > 0) {
+      streak = savedStreakLogin; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; isCheckedIn = false;
+    } else { streakBadge.textContent = '🔥 连续 0 天'; streakNum.textContent = '0'; isCheckedIn = false; }
+    authScreen.classList.add('hidden'); mainScreen.classList.add('active');
+    show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle(); updateNotifUI();
+    startNotifSimulator();
   });
-  nickInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !btnStart.disabled) btnStart.click();
-  });
+  nickInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !btnStart.disabled) btnStart.click(); });
   document.querySelector('.avatar-option').classList.add('selected');
 
+  function startNotifSimulator() {
+    function next() { notifTimer = setTimeout(function() { if (nickname) { simulateNotif(); } next(); }, rand(5000, 10000)); }
+    next();
+  }
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 10. TAB NAVIGATION
+  // 8. TAB NAVIGATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   navItems.forEach(function(item) {
@@ -693,43 +792,33 @@
       navItems.forEach(function(n) { n.classList.remove('active'); });
       this.classList.add('active');
       Object.keys(tabPages).forEach(function(k) { tabPages[k].classList.toggle('active', k === tab); });
+      if (tab === 'circle') renderCircle();
     });
   });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 11. DAILY CHECKIN
+  // 9. DAILY CHECKIN + RESTORE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   btnCheckin.addEventListener('click', function() {
     if (isCheckedIn) { show('⏰ 今天已经打过卡啦，明天继续！'); return; }
-    isCheckedIn = true; streak += 1;
-    streakNum.textContent = streak;
-    streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-    var now = new Date();
-    var pad = function(n) { return String(n).padStart(2, '0'); };
+    isCheckedIn = true; streak += 1; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+    var now = new Date(), pad = function(n) { return String(n).padStart(2, '0'); };
     checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-    btnCheckin.textContent = '✅ 已打卡';
-    btnCheckin.classList.add('done');
-    lss('fitmate_streak', streak);
-    lss('fitmate_streak_date', now.toDateString());
+    btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+    lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
     show('🎉 打卡成功！已连续 ' + streak + ' 天');
   });
 
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 12. RESTORE STREAK
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  var savedStreak = ls('fitmate_streak', 0);
-  var savedDate   = ls('fitmate_streak_date', '');
-  var today       = new Date().toDateString();
+  var savedStreak = ls('fitmate_streak', 0), savedDate = ls('fitmate_streak_date', ''), today = new Date().toDateString();
   if (savedDate === today) {
-    streak = savedStreak; isCheckedIn = true;
-    streakNum.textContent = streak;
-    btnCheckin.textContent = '✅ 已打卡';
-    btnCheckin.classList.add('done');
+    streak = savedStreak; isCheckedIn = true; streakNum.textContent = streak;
+    streakBadge.textContent = '🔥 连续 ' + streak + ' 天'; btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+    if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
+  } else if (savedDate && savedStreak > 0) {
+    streak = savedStreak; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
   }
-
-  console.log('🏋️ FitMate 升级版已加载 — 19种运动 + 无氧多级表单');
+  console.log('🏋️ FitMate 社交版已加载');
 })();
 </script>
 </body>
