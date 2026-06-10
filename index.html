@@ -98,6 +98,7 @@
 
     .privacy-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
     .privacy-toggle span { color: #9ca3af; font-size: 13px; }
+    .privacy-toggle .privacy-label-active { color: #a3e635; font-weight: 600; }
     .toggle-switch { width: 48px; height: 26px; background: #4b5563; border-radius: 13px; cursor: pointer; position: relative; transition: background 0.25s; flex-shrink: 0; }
     .toggle-switch.active { background: #a3e635; }
     .toggle-switch::after { content: ''; position: absolute; width: 22px; height: 22px; background: #f9fafb; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.25s; }
@@ -734,7 +735,7 @@
     extraCard.style.display = 'none'; btnConfirm.disabled = true;
     moodGrid.querySelectorAll('.mood-item').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-    selectedMood = '😄'; isPrivate = false; privToggle.classList.remove('active');
+    selectedMood = '😄'; isPrivate = false; privToggle.classList.add('active');
   }
 
   moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
@@ -762,6 +763,9 @@
   btnStart.addEventListener('click', function() {
     nickname = nickInput.value.trim(); if (!nickname) return;
     topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
+    // Save login info for auto-login next time
+    lss('fitmate_nickname', nickname);
+    lss('fitmate_avatar', selectedAvatar);
     var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString();
     if (savedDateLogin === todayLogin) {
       streak = savedStreakLogin; isCheckedIn = true; streakNum.textContent = streak;
@@ -810,15 +814,56 @@
     show('🎉 打卡成功！已连续 ' + streak + ' 天');
   });
 
-  var savedStreak = ls('fitmate_streak', 0), savedDate = ls('fitmate_streak_date', ''), today = new Date().toDateString();
-  if (savedDate === today) {
-    streak = savedStreak; isCheckedIn = true; streakNum.textContent = streak;
-    streakBadge.textContent = '🔥 连续 ' + streak + ' 天'; btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-    if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
-  } else if (savedDate && savedStreak > 0) {
-    streak = savedStreak; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 10. AUTO-LOGIN on page load
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  var savedNick = ls('fitmate_nickname', '');
+  var savedAv   = ls('fitmate_avatar', '');
+
+  if (savedNick && savedAv) {
+    // Restore user identity
+    nickname = savedNick;
+    selectedAvatar = savedAv;
+    topAvatar.textContent = selectedAvatar;
+    topName.textContent   = nickname;
+
+    // Restore streak
+    var savedStreak = ls('fitmate_streak', 0);
+    var savedDate   = ls('fitmate_streak_date', '');
+    var today       = new Date().toDateString();
+
+    if (savedDate === today) {
+      streak = savedStreak; isCheckedIn = true;
+      streakNum.textContent = streak;
+      streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+      btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+      if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
+    } else if (savedDate && savedStreak > 0) {
+      streak = savedStreak;
+      streakNum.textContent = streak;
+      streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+    } else {
+      streakBadge.textContent = '🔥 连续 0 天';
+      streakNum.textContent = '0';
+    }
+
+    // Skip login screen
+    authScreen.classList.add('hidden');
+    mainScreen.classList.add('active');
+
+    // Initialize everything
+    renderSports();
+    renderCircle();
+    updateNotifUI();
+
+    // Start auto notification simulator
+    startNotifSimulator();
+
+    show('👋 自动登录成功，' + nickname + '！');
   }
-  console.log('🏋️ FitMate 社交版已加载');
+
+  console.log('🏋️ FitMate 社交版已加载 — 自动登录就绪');
 })();
 </script>
 </body>
