@@ -358,7 +358,6 @@
   var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   var sbReady = false;
 
-  // Check tables exist
   async function sbInit() {
     try {
       var { data, error } = await supabase.from('fitmate_posts').select('id').limit(1);
@@ -382,13 +381,23 @@
       return data || []; 
     } catch(e) { return []; }
   }
+
+  // 核心升级：利用 select().single() 实时向云端索要合规的自增 ID 并回填本地组件
   async function sbInsertPost(p) {
-    if (!sbReady) return;
+    if (!sbReady) return null;
     try { 
-      var { error } = await supabase.from('fitmate_posts').insert([p]); 
-      if (error) console.error('❌ 云端写入遭遇卡点 (Insert Failed):', error);
-    } catch(e) { console.error('Insert exception:', e); }
+      var { data, error } = await supabase.from('fitmate_posts').insert([p]).select().single(); 
+      if (error) {
+        console.error('❌ 云端同步错误:', error.message);
+        return null;
+      }
+      return data;
+    } catch(e) { 
+      console.error('Insert exception:', e); 
+      return null;
+    }
   }
+
   async function sbUpdateLikes(id, likes) {
     if (!sbReady) return;
     try { await supabase.from('fitmate_posts').update({ likes: likes }).eq('id', id); } catch(e) {}
@@ -475,7 +484,7 @@
   const notifOverlay = $('notifOverlay'), notifPanel = $('notifPanel'), notifList = $('notifList'), notifReadAll = $('notifReadAll');
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 3. UTILITIES (双回路缓存架构：防御 Cline 的纯文本脏数据)
+  // 3. UTILITIES (缓存防崩对账模块)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2400); }
@@ -546,23 +555,22 @@
     var activePlaceholder = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.placeholder : null;
     var activeValue = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.value : '';
 
-    // A. 抓取云端可用动态
+    // A. 拉取云端动态
     var cloudPosts = await sbFetchPosts();
-    // B. 抓取本地兜底高精缓存
+    // B. 读取本地备份
     var localPosts = ls('fitmate_local_posts', []);
     
-    // C. 双回路对账去重（通过 client_id 或 组合键）
+    // C. 混合排重去重
     var mergedPosts = [...cloudPosts];
     localPosts.forEach(function(lp) {
       var isAlreadyInCloud = mergedPosts.some(function(cp) {
-        return cp.client_id === lp.client_id || (cp.username === lp.username && cp.created_at === lp.created_at);
+        return String(cp.id) === String(lp.id) || (cp.username === lp.username && cp.created_at === lp.created_at);
       });
       if (!isAlreadyInCloud) {
         mergedPosts.push(lp);
       }
     });
 
-    // D. 统一按时间倒序排列
     mergedPosts.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
 
     if (mergedPosts.length === 0) {
@@ -578,7 +586,7 @@
       var isLiked = p.likes && p.likes.indexOf(nickname) !== -1;
       var moodEmoji = p.mood || '😄';
 
-      h += '<div class="post-card" data-pid="' + p.id + '" data-cid="' + (p.client_id || '') + '">';
+      h += '<div class="post-card" data-pid="' + p.id + '">';
       h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.username || '用户') + '</div><div class="post-time">' + fmt(p.created_at) + '</div></div></div>';
       h += '<div class="post-sport"><span class="sport-tag">' + (ed.emoji || '🏋️') + ' ' + (ed.name || '运动') + '</span></div>';
       h += '<div class="post-data">';
@@ -622,7 +630,7 @@
     circleFeed.querySelectorAll('[data-act="like"]').forEach(function(el) {
       el.onclick = async function() {
         var card = this.closest('.post-card'), pid = card.dataset.pid;
-        if (!pid || pid === 'undefined') return show('💡 本地暂存动态暂不支持云端点赞');
+        if (!pid || String(pid).indexOf('temp_') === 0) return show('💡 动态正在同步至云端，请稍后再试');
 
         var { data: livePost } = await supabase.from('fitmate_posts').select('likes, username').eq('id', pid).single();
         if (!livePost) return;
@@ -646,7 +654,7 @@
         var wrap = this.closest('.comment-input-wrap'), input = wrap.querySelector('.comment-input');
         var pid = wrap.dataset.pid, text = input.value.trim();
         if (!text) return;
-        if (!pid || pid === 'undefined') return show('💡 本地暂存动态暂不支持云端评论');
+        if (!pid || String(pid).indexOf('temp_') === 0) return show('💡 动态正在同步至云端，请稍后再试');
 
         var replyTo = null, pl = input.placeholder;
         if (pl.indexOf('回复 @') === 0) replyTo = pl.replace('回复 @', '').replace(':', '');
@@ -727,7 +735,7 @@
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 6. CHECK-IN (双流合并，双重防卫排版错位)
+  // 6. CHECK-IN (双流对账 & 样式错位消除)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function renderSports() {
@@ -752,7 +760,7 @@
   function buildForm(sport) {
     var t = sport.type; dynFormContent.innerHTML = '';
     if (t === 'distance') {
-      // 样式修复：移除上一版的嵌套重复 class，还原扁平化的输入排版
+      // 深度排雷：全量剔除重复多余包裹的嵌套表单类名，复原扁平结构
       dynFormContent.innerHTML = '<div class="form-row"><div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" /></div><div class="form-group"><label>📏 运动距离（公里）</label><input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" /></div></div>';
       dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     } else if (t === 'anaerobic') {
@@ -810,9 +818,8 @@
     var list = ls('fitmate_checkins', []); list.push({ id: Date.now(), timestamp: new Date().toISOString(), data: ed }); lss('fitmate_checkins', list); incCount(s.id);
     
     if (!isPrivate) {
-      // 赋予独一无二的客户端验证密钥，用于本地/云端对账去重
+      // 深度对账升级：移除任何 id 主键。只传确定存在的列，完美防范42703未知列崩溃
       var cloudPost = { 
-        client_id: 'client_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         username: nickname, 
         avatar: selectedAvatar, 
         exercise_type: s.type, 
@@ -824,13 +831,25 @@
         created_at: new Date().toISOString() 
       };
 
-      // 核心跨国集成对账修复：本地先行存入高速缓存，100% 确保动态瞬间产生
+      // 1. 本地生成带 temp_ 前缀的临时单据，拒绝任何白屏无反应
+      var tempId = 'temp_' + Date.now();
+      var localPostMock = Object.assign({}, cloudPost, { id: tempId });
       var localPosts = ls('fitmate_local_posts', []);
-      localPosts.unshift(cloudPost);
+      localPosts.unshift(localPostMock);
       lss('fitmate_local_posts', localPosts);
+      await renderCircle(); // 本地闪电回流展示
 
-      // 后台默默发往 Supabase 云端
-      await sbInsertPost(cloudPost);
+      // 2. 静默交由云端入库
+      var liveSavedData = await sbInsertPost(cloudPost);
+      if (liveSavedData && liveSavedData.id) {
+        // 3. 云端接单成功！将自增/UUID真实ID反向回填覆盖本地假单，彻底解决点赞报错Bug
+        var currentLocals = ls('fitmate_local_posts', []);
+        var idx = currentLocals.findIndex(function(lp) { return lp.id === tempId; });
+        if (idx !== -1) {
+          currentLocals[idx] = liveSavedData;
+          lss('fitmate_local_posts', currentLocals);
+        }
+      }
     }
     
     if (!isCheckedIn) {
@@ -841,9 +860,9 @@
       lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
     }
     
-    show('🎉 打卡成功！' + s.emoji + ' ' + s.name + ' 已更新至本地与云端');
+    show('🎉 打卡成功！已双流同步更新');
     resetForm();
-    await renderCircle(); // 立即本地强制重绘，拒绝任何数据黑洞导致的白屏延迟
+    await renderCircle(); 
   });
 
   function resetForm() {
@@ -855,7 +874,7 @@
     document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
     selectedMood = '😄'; 
     isPrivate = false; 
-    privToggle.classList.add('active'); // 默认重置为所有人可见（高亮绿状态）
+    privToggle.classList.add('active'); 
   }
 
   moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
@@ -866,7 +885,6 @@
   });
   document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
   
-  // 核心逻辑修复：隐私反转校准（高亮绿色代表 active = 所有人可见，灰色代表仅自己可见）
   privToggle.addEventListener('click', function() { 
     this.classList.toggle('active'); 
     isPrivate = !this.classList.contains('active');
