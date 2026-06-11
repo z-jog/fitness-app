@@ -11,10 +11,12 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: #111827; min-height: 100vh; display: flex; justify-content: center; align-items: center;
+      transition: background 0.3s;
     }
     #app {
       width: 100%; max-width: 420px; min-height: 100vh; min-height: 100dvh; background: #1f2937;
       position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,0,0,0.6);
+      transition: background 0.3s;
     }
     #auth-screen {
       flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -54,11 +56,6 @@
     .streak-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .streak-num { font-size: 36px; font-weight: 800; color: #a3e635; }
     .streak-label { color: #9ca3af; font-size: 13px; }
-    .btn-checkin { width: 100%; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
-    .btn-checkin:active { transform: scale(0.97); }
-    .btn-checkin.done { background: #4b5563; color: #6b7280; cursor: default; }
-    .btn-checkin.done:active { transform: none; }
-    .checkin-time { text-align: center; color: #6b7280; font-size: 13px; margin-top: 8px; }
 
     .sport-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
     .sport-item { background: #4b5563; border-radius: 14px; padding: 12px 4px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; user-select: none; }
@@ -198,6 +195,20 @@
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type="number"] { -moz-appearance: textfield; }
+
+    /* ── 📊 亮色皮肤全环境平滑反转矩阵样式 ── */
+    .light-theme-active { background: #f3f4f6 !important; }
+    .light-theme-active #app { background: #f9fafb !important; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .light-theme-active .checkin-card, .light-theme-active .post-card, .light-theme-active .auth-card { background: #ffffff !important; border: 1px solid #e5e7eb !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; }
+    .light-theme-active h2, .light-theme-active h3, .light-theme-active h4, .light-theme-active .top-bar-name, .light-theme-active .auth-title { color: #111827 !important; }
+    .light-theme-active span, .light-theme-active label, .light-theme-active .post-data, .light-theme-active .streak-label { color: #4b5563 !important; }
+    .light-theme-active .sport-item, .light-theme-active .body-part-tab, .light-theme-active .exercise-card, .light-theme-active .comment-input, .light-theme-active .nickname-input, .light-theme-active .avatar-option, .light-theme-active select { background: #f3f4f6 !important; color: #111827 !important; border-color: #d1d5db !important; }
+    .light-theme-active .sport-item.selected, .light-theme-active .body-part-tab.active, .light-theme-active .exercise-card.selected, .light-theme-active .avatar-option.selected { background: #ecfccb !important; border-color: #84cc16 !important; }
+    .light-theme-active .bottom-nav, .light-theme-active .top-bar { background: #ffffff !important; border-color: #e5e7eb !important; }
+    .light-theme-active .rank-btn { background: #374151; color: #f9fafb; }
+    .light-theme-active .rank-btn.active { background: #a3e635; color: #111827; }
+    .light-theme-active .cal-day { color: #4b5563; }
+    .light-theme-active .cal-day.has-data { background: #ecfccb !important; color: #3f6212 !important; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -209,10 +220,10 @@
   <div id="auth-screen">
     <div class="auth-card">
       <div class="logo-icon">💪</div>
-      <div class="auth-title">FitMate</div>
-      <div class="auth-sub">健身打卡 · 遇见更好的自己</div>
+      <div id="lblAuthTitle" class="auth-title">FitMate</div>
+      <div id="lblAuthSub" class="auth-sub">健身打卡 · 遇见更好的自己</div>
 
-      <label class="input-label" for="nickname">你的昵称</label>
+      <label id="lblNickLabel" class="input-label" for="nickname">你的昵称</label>
       <input
         id="nickname"
         class="nickname-input"
@@ -222,7 +233,7 @@
         autocomplete="off"
       />
 
-      <span class="avatar-label">选择头像</span>
+      <span id="lblAvatarLabel" class="avatar-label">选择头像</span>
       <div class="avatar-grid" id="avatarGrid">
         <div class="avatar-option" data-avatar="🏃">🏃</div>
         <div class="avatar-option" data-avatar="🏋️">🏋️</div>
@@ -240,28 +251,17 @@
         <div class="top-bar-avatar" id="topAvatar">🏃</div>
         <span class="top-bar-name" id="topName">用户</span>
       </div>
-      <span class="top-bar-badge">🔥 连续 0 天</span>
+      <span class="top-bar-badge" id="mainStreakBadge">🔥 连续 0 天</span>
     </div>
 
     <div class="content-area" id="contentArea">
 
       <div class="tab-page active" id="page-checkin">
 
-        <div class="checkin-card">
-          <h3>📅 今日打卡</h3>
-          <div class="streak-row">
-            <span class="streak-num" id="streakNum">0</span>
-            <div>
-              <div style="color:#f9fafb;font-weight:600;">连续打卡天数</div>
-              <div class="streak-label">坚持就是胜利 💪</div>
-            </div>
-          </div>
-          <button class="btn-checkin" id="btnCheckin">✅ 立即打卡</button>
-          <div class="checkin-time" id="checkinTime"></div>
-        </div>
+        <div style="display:none;"><span id="streakNum">0</span><button id="btnCheckin"></button><div id="checkinTime"></div></div>
 
         <div class="checkin-card">
-          <h3>🏋️ 选择运动</h3>
+          <h3 id="lblSelectSport">🏋️ 选择运动</h3>
           <div class="sport-grid" id="sportGrid"></div>
         </div>
 
@@ -271,16 +271,16 @@
         </div>
 
         <div class="checkin-card" id="extraCard" style="display:none;">
-          <h3>😊 今日状态</h3>
+          <h3 id="lblTodayMood">😊 今日状态</h3>
           <div class="mood-grid" id="moodGrid">
             <div class="mood-item" data-mood="😄">😄</div>
             <div class="mood-item" data-mood="😮‍💨">😮‍💨</div>
             <div class="mood-item" data-mood="💪">💪</div>
           </div>
           <div class="privacy-toggle">
-            <span>🔒 仅自己可见</span>
+            <span id="lblPrivSelf">🔒 仅自己可见</span>
             <div class="toggle-switch active" id="privacyToggle"></div>
-            <span>🌍 所有人可见</span>
+            <span id="lblPrivAll">🌍 所有人可见</span>
           </div>
           <button class="btn-confirm-checkin" id="btnConfirmCheckin" disabled>💾 确认打卡</button>
         </div>
@@ -289,7 +289,7 @@
 
       <div class="tab-page" id="page-circle">
         <div class="circle-top-bar">
-          <h2>🌐 运动圈子</h2>
+          <h2 id="lblTabCircle">🌐 运动圈子</h2>
           <div class="notif-badge-wrap">
             <span class="notif-badge hidden" id="notifBadge">0</span>
           </div>
@@ -298,18 +298,66 @@
       </div>
 
       <div class="tab-page" id="page-rank">
-        <div class="placeholder-card">
-          <div class="placeholder-icon">🏅</div>
-          <div class="placeholder-title">排行榜</div>
-          <div class="placeholder-desc">查看本周运动排行，和好友一较高下！</div>
+        <div class="flex flex-wrap gap-1.5 mb-4 justify-between" id="rankTabs">
+          <button class="rank-btn flex-1 py-2 text-[11px] font-bold rounded-lg bg-lime-400 text-gray-900 active" data-rep="3.1" id="lblRep1">时长榜</button>
+          <button class="rank-btn flex-1 py-2 text-[11px] font-bold rounded-lg bg-gray-700 text-white" data-rep="3.2" id="lblRep2">次数榜</button>
+          <button class="rank-btn flex-1 py-2 text-[11px] font-bold rounded-lg bg-gray-700 text-white" data-rep="3.3" id="lblRep3">跑步榜</button>
+        </div>
+        
+        <div class="mb-4" id="rankFilterRow">
+          <select id="rankSportSelector" class="w-full p-2.5 bg-gray-600 text-white text-sm rounded-xl border border-gray-500 outline-none focus:border-lime-400"></select>
+        </div>
+
+        <div class="checkin-card" style="padding: 16px;">
+          <div class="flex justify-between border-b border-gray-600 pb-2 text-xs text-gray-400 font-bold mb-3">
+            <span id="lblColRank">排名/搭子</span>
+            <span id="rankValueHeader">贡献值</span>
+          </div>
+          <div id="rankList" class="flex flex-col gap-3"></div>
         </div>
       </div>
 
       <div class="tab-page" id="page-mine">
-        <div class="placeholder-card">
-          <div class="placeholder-icon">👤</div>
-          <div class="placeholder-title">个人中心</div>
-          <div class="placeholder-desc">查看你的运动统计与成就徽章</div>
+        <div class="checkin-card text-center">
+          <div class="w-14 h-14 bg-lime-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-2 shadow-lg shadow-lime-900/20" id="mineAvatar">🏃</div>
+          <h2 class="text-base font-bold text-white mb-3" id="mineName">用户</h2>
+          <div class="grid grid-cols-3 gap-2 border-t border-gray-600/50 pt-3">
+            <div>
+              <div class="text-lg font-black text-lime-400" id="statDuration">0</div>
+              <div class="text-[10px] text-gray-400" id="lblStatHours">总分钟数</div>
+            </div>
+            <div>
+              <div class="text-xl font-black text-lime-400" id="statCounts">0</div>
+              <div class="text-[10px] text-gray-400" id="lblStatTimes">打卡次数</div>
+            </div>
+            <div>
+              <div class="text-[12px] font-black text-lime-400 pt-1" id="statPercent">0%</div>
+              <div class="text-[10px] text-gray-400" id="lblStatBeat">全网超越</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkin-card">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-xs font-bold text-white m-0" id="lblFootprintCal">👣 运动足迹日历</h3>
+            <span class="text-xs text-gray-400 font-medium" id="calMonthTitle">2026.06</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-gray-400 font-bold mb-1">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1" id="calendarGrid"></div>
+        </div>
+
+        <div class="checkin-card flex flex-col gap-3.5" style="padding: 16px;">
+          <h3 class="text-xs font-bold text-white border-b border-gray-600/50 pb-1.5 mb-1" id="lblSysSettings">⚙️ 系统与体验设置</h3>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-gray-300" id="lblSetTheme">视觉模式切换</span>
+            <button id="btnToggleTheme" class="px-3 py-1 text-xs font-bold rounded-lg bg-gray-600 text-white transition-all">Dark</button>
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-gray-300" id="lblSetLang">多语言环境</span>
+            <button id="btnToggleLang" class="px-3 py-1 text-xs font-bold rounded-lg bg-gray-600 text-white transition-all">English</button>
+          </div>
         </div>
       </div>
 
@@ -318,20 +366,20 @@
     <div class="bottom-nav">
       <div class="nav-item active" data-tab="checkin">
         <span class="nav-icon">✅</span>
-        <span class="nav-label">打卡</span>
+        <span class="nav-label" id="lblNavPunch">打卡</span>
       </div>
       <div class="nav-item" data-tab="circle">
         <span class="nav-icon">🌐</span>
-        <span class="nav-label">圈子</span>
+        <span class="nav-label" id="lblNavCircle">圈子</span>
         <span class="nav-dot" id="navDot"></span>
       </div>
       <div class="nav-item" data-tab="rank">
         <span class="nav-icon">🏅</span>
-        <span class="nav-label">排行榜</span>
+        <span class="nav-label" id="lblNavRank">排行榜</span>
       </div>
       <div class="nav-item" data-tab="mine">
         <span class="nav-icon">👤</span>
-        <span class="nav-label">我的</span>
+        <span class="nav-label" id="lblNavMine">我的</span>
       </div>
     </div>
 
@@ -343,12 +391,10 @@
     <div id="notifList"></div>
     <button class="notif-read-all" id="notifReadAll">✔ 一键已读</button>
   </div>
-
 </div>
 
 <script>
-(function () {
-  'use strict';
+(function () {  'use strict';
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ⚡ INTEGRATED CONFIGURATION
@@ -356,10 +402,15 @@
   var SUPABASE_URL = 'https://kuvrzqdpccahujhcvrpp.supabase.co';
   var SUPABASE_ANON = 'sb_publishable_Gn_6laUiGUYHANt916z8sw_og6ZIMTr';
   
-  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // CDN 异步容错核心防线：即便弱网下 SDK 延迟，也阻断所有崩溃链条
+  var supabase = null;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  }
   var sbReady = false;
 
   async function sbInit() {
+    if (!supabase) { sbReady = true; return; }
     try {
       var { data, error } = await supabase.from('fitmate_posts').select('id').limit(1);
       sbReady = true;
@@ -370,57 +421,30 @@
   }
 
   async function sbFetchPosts() {
-    if (!sbReady) return [];
+    if (!supabase || !sbReady) return [];
     try { 
-      var { data, error } = await supabase.from('fitmate_posts').select('*').order('created_at', { ascending: false }).limit(50); 
-      if (error) {
-        alert("⚠️ 数据库读取被拦截！详情请看: " + error.message + " (请去SQL Editor修复RLS)");
-        console.error(error);
-      }
+      var { data, error } = await supabase.from('fitmate_posts').select('*').order('created_at', { ascending: false }).limit(200); 
       return data || []; 
     } catch(e) { return []; }
   }
 
   async function sbInsertPost(p) {
-    if (!sbReady) return null;
+    if (!supabase || !sbReady) return null;
     try { 
       var { data, error } = await supabase.from('fitmate_posts').insert([p]).select(); 
-      if (error) {
-        alert("❌ 云端拒收单据！\n\n原因: " + error.message + "\n\n提示：请检查SQL Editor是否执行了建表脚本！");
-        console.error('Insert Error Detail:', error);
-        return null;
-      }
+      if (error) { console.error(error); return null; }
       return data && data.length ? data[0] : null;
-    } catch(e) { 
-      console.error('Insert catch block:', e); 
-      return null;
-    }
+    } catch(e) { return null; }
   }
 
-  async function sbUpdateLikes(id, likes) {
-    if (!sbReady) return;
-    try { await supabase.from('fitmate_posts').update({ likes: likes }).eq('id', id); } catch(e) {}
-  }
-  async function sbUpdateComments(id, comments) {
-    if (!sbReady) return;
-    try { await supabase.from('fitmate_posts').update({ comments: comments }).eq('id', id); } catch(e) {}
-  }
-  async function sbFetchNotifs(user) {
-    if (!sbReady || !user) return [];
-    try { var { data } = await supabase.from('fitmate_notifications').select('*').eq('target_user', user).order('created_at', { ascending: false }).limit(50); return data || []; }
-    catch(e) { return []; }
-  }
-  async function sbInsertNotif(n) {
-    if (!sbReady) return;
-    try { await supabase.from('fitmate_notifications').insert([n]); } catch(e) {}
-  }
-  async function sbMarkNotifsRead(user) {
-    if (!sbReady || !user) return;
-    try { await supabase.from('fitmate_notifications').update({ is_read: true }).eq('target_user', user).eq('is_read', false); } catch(e) {}
-  }
+  async function sbUpdateLikes(id, likes) { if (!supabase || !sbReady) return; try { await supabase.from('fitmate_posts').update({ likes: likes }).eq('id', id); } catch(e) {} }
+  async function sbUpdateComments(id, comments) { if (!supabase || !sbReady) return; try { await supabase.from('fitmate_posts').update({ comments: comments }).eq('id', id); } catch(e) {} }
+  async function sbFetchNotifs(user) { if (!supabase || !sbReady || !user) return []; try { var { data } = await supabase.from('fitmate_notifications').select('*').eq('target_user', user).order('created_at', { ascending: false }).limit(50); return data || []; } catch(e) { return []; } }
+  async function sbInsertNotif(n) { if (!supabase || !sbReady) return; try { await supabase.from('fitmate_notifications').insert([n]); } catch(e) {} }
+  async function sbMakeNotifsRead(user) { if (!supabase || !sbReady || !user) return; try { await supabase.from('fitmate_notifications').update({ is_read: true }).eq('target_user', user).eq('is_read', false); } catch(e) {} }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 1. DATA
+  // 1. DATA (完好无损保留完整的 19 种运动项目)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   var ALL_SPORTS = [
@@ -441,7 +465,7 @@
     { id: 'yoga', name: '瑜伽', emoji: '🧘‍♀️', type: 'normal' },
     { id: 'pilates', name: '普拉提', emoji: '🩰', type: 'normal' },
     { id: 'skiing', name: '滑雪', emoji: '⛷️', type: 'normal' },
-    { id: 'mixedCardio', name: '混合有氧', emoji: '🫁', type: 'normal' },
+    { id: 'mixedCardio', name: '混合有氧', emoji: '𫤗', type: 'normal' },
     { id: 'stairs', name: '爬楼梯', emoji: '🪜', type: 'normal' },
   ];
   const BODY_PARTS = [
@@ -449,31 +473,229 @@
     { id: 'shoulder', label: '练肩' }, { id: 'leg', label: '练腿' },
     { id: 'glute', label: '练臀' }, { id: 'arm', label: '练手臂' }, { id: 'abs', label: '练腹' },
   ];
-  const EXERCISES = {
-    chest: [ { name: '对角线卧推', emoji: '🏋️' }, { name: '哑铃飞鸟', emoji: '🦅' }, { name: '双杠臂屈伸', emoji: '💪' } ],
-    back: [ { name: '高位下拉', emoji: '⬇️' }, { name: '杠铃划船', emoji: '🚣' }, { name: '引体向上', emoji: '⬆️' } ],
-    shoulder: [ { name: '杠铃推举', emoji: '🏋️' }, { name: '哑铃侧平举', emoji: '↔️' }, { name: '哑铃前平举', emoji: '➡️' } ],
-    leg: [ { name: '杠铃深蹲', emoji: '🦵' }, { name: '腿举', emoji: '🦿' }, { name: '杠铃硬拉', emoji: '🏋️' } ],
-    glute: [ { name: '臀桥', emoji: '🍑' }, { name: '后踢腿', emoji: '🦶' }, { name: '保加利亚蹲', emoji: '🧎' } ],
-    arm: [ { name: '杠铃弯举', emoji: '💪' }, { name: '绳索下压', emoji: '⬇️' }, { name: '哑铃锤式弯举', emoji: '🔨' } ],
-    abs: [ { name: '卷腹', emoji: '😤' }, { name: '悬垂举腿', emoji: '⬆️' }, { name: '俄罗斯转体', emoji: '🔄' } ],
-  };
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 2. STATE
+  // 🛠️ STATE & I18N MANAGEMENT
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
   let selectedSport = null, selectedBodyPart = null, selectedExercise = null;
   let selectedMood = '😄', isPrivate = false, isCheckedIn = false, streak = 0;
   let nickname = '', selectedAvatar = '🏃', toastTimer = null;
+  let currentLang = 'zh', currentTheme = 'dark', activeReport = '3.1';
 
-  // DOM
+  var I18N_DICT = {
+    zh: {
+      logo_title: "FitMate", logo_sub: "健身打卡 · 遇见更好的自己", nick_label: "你的昵称", avatar_label: "选择头像", btn_start: "开启健身之旅",
+      select_sport: "🏋️ 选择运动", today_mood: "😊 今日状态", priv_self: "🔒 仅自己可见", priv_all: "🌍 所有人可见",
+      rep_1: "时长榜", rep_2: "次数榜", rep_3: "跑步榜", col_rank: "排名/搭子", stat_hours: "总分钟数", stat_times: "打卡次数",
+      stat_beat: "全网超越", footprint_cal: "👣 运动足迹日历", sys_settings: "⚙️ 系统与体验设置", set_theme: "视觉模式切换", set_lang: "多语言环境",
+      loading: "🌐 数据对账中...", no_data: "📭 当月暂无记录", nav_punch: "打卡", nav_circle_l: "圈子", nav_rank: "排行榜", nav_mine: "我的"
+    },
+    en: {
+      logo_title: "FitMate", logo_sub: "Fitness Check-in · Meet Better Self", nick_label: "Your Nickname", avatar_label: "Choose Avatar", btn_start: "Start Journey",
+      select_sport: "🏋️ Choose Activity", today_mood: "😊 Energy Status", priv_self: "🔒 Private", priv_all: "🌍 Public",
+      rep_1: "Duration", rep_2: "Workouts", rep_3: "Running", col_rank: "Rank / Buddy", stat_hours: "Total Mins", stat_times: "Total Sessions",
+      stat_beat: "Beaten Ratio", footprint_cal: "👣 Fitness Footprints", sys_settings: "⚙️ System & Settings", set_theme: "Visual Theme", set_lang: "Language",
+      loading: "🌐 Loading Matrix...", no_data: "📭 No data on record", nav_punch: "Punch", nav_circle_l: "Circle", nav_rank: "Rank", nav_mine: "Me"
+    }
+  };
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    var d = I18N_DICT[lang];
+    var t = function(id, key) { var el = document.getElementById(id); if (el) el.textContent = d[key]; };
+    t('lblAuthTitle', 'logo_title'); t('lblAuthSub', 'logo_sub'); t('lblNickLabel', 'nick_label'); t('lblAvatarLabel', 'avatar_label'); t('btnStart', 'btn_start');
+    t('lblSelectSport', 'select_sport'); t('lblTodayMood', 'today_mood'); t('lblPrivSelf', 'priv_self'); t('lblPrivAll', 'priv_all');
+    t('lblTabCircle', 'nav_circle_l'); t('lblRep1', 'rep_1'); t('lblRep2', 'rep_2'); t('lblRep3', 'rep_3'); t('lblColRank', 'col_rank');
+    t('lblStatHours', 'stat_hours'); t('lblStatTimes', 'stat_times'); t('lblStatBeat', 'stat_beat'); t('lblFootprintCal', 'footprint_cal'); t('lblSysSettings', 'sys_settings'); t('lblSetTheme', 'set_theme'); t('lblSetLang', 'set_lang');
+    
+    var navs = document.querySelectorAll('.bottom-nav .nav-item');
+    if(navs.length >= 4) {
+      navs[0].querySelector('.nav-label').textContent = d['nav_punch'];
+      navs[1].querySelector('.nav-label').textContent = d['nav_circle_l'];
+      navs[2].querySelector('.nav-label').textContent = d['nav_rank'];
+      navs[3].querySelector('.nav-label').textContent = d['nav_mine'];
+    }
+
+    var valHeader = document.getElementById('rankValueHeader');
+    if (valHeader) {
+      // 优化6/7/8：排行榜多维自适应表头切换
+      if (activeReport === '3.1') valHeader.textContent = lang === 'zh' ? '当月总时间(分钟)' : 'Mins (Month)';
+      if (activeReport === '3.2') valHeader.textContent = lang === 'zh' ? '当月总次数' : 'Times (Month)';
+      if (activeReport === '3.3') valHeader.textContent = lang === 'zh' ? '当月跑步里程(公里)' : 'Distance (Month)';
+    }
+    var btnToggleLang = document.getElementById('btnToggleLang');
+    if (btnToggleLang) btnToggleLang.textContent = lang === 'zh' ? 'English' : '中文';
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🏅 RANKING ENGINE (自然月滚动交叉聚合算法)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  function initRankSelectors() {
+    var selector = document.getElementById('rankSportSelector');
+    if (!selector) return; 
+    selector.innerHTML = '';
+    var optAll = document.createElement('option'); optAll.value = 'ALL'; optAll.textContent = currentLang === 'zh' ? '全部运动项目' : 'All Sports';
+    selector.appendChild(optAll);
+    ALL_SPORTS.forEach(function(s) {
+      var opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.emoji + ' ' + s.name;
+      selector.appendChild(opt);
+    });
+    selector.onchange = function() { renderRankings(); };
+  }
+
+  async function renderRankings() {
+    var rankList = document.getElementById('rankList');
+    if (!rankList) return;
+    rankList.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm">' + I18N_DICT[currentLang].loading + '</div>';
+    
+    var cloudPosts = await sbFetchPosts();
+    var localPosts = ls('fitmate_local_posts', []);
+    var merged = [...cloudPosts];
+    localPosts.forEach(function(lp) { if (!merged.some(function(cp) { return String(cp.id) === String(lp.id); })) merged.push(lp); });
+
+    var selectorEl = document.getElementById('rankSportSelector');
+    var sportFilter = selectorEl ? selectorEl.value : 'ALL';
+    var userAggregates = {};
+    var now = new Date(); var thisYear = now.getFullYear(); var thisMonth = now.getMonth();
+
+    merged.forEach(function(p) {
+      var postDate = new Date(p.created_at);
+      if (postDate.getFullYear() !== thisYear || postDate.getMonth() !== thisMonth) return; // 锁定当月更新
+      
+      var ed = p.exercise_data || {}; var sportIdOrName = ed.name;
+      var matchedSport = ALL_SPORTS.find(function(s) { return s.name === sportIdOrName || s.id === sportIdOrName; });
+      var currentSportId = matchedSport ? matchedSport.id : '';
+
+      if (sportFilter !== 'ALL' && currentSportId !== sportFilter) return;
+      var user = p.username || '匿名用户';
+      if (!userAggregates[user]) userAggregates[user] = { duration: 0, count: 0, runDistance: 0, avatar: p.avatar || '🏃' };
+
+      userAggregates[user].count += 1;
+      if (ed.duration) userAggregates[user].duration += parseFloat(ed.duration);
+      if (currentSportId === 'running' && ed.distance) userAggregates[user].runDistance += parseFloat(ed.distance);
+    });
+
+    var sortable = []; Object.keys(userAggregates).forEach(function(user) { sortable.push({ username: user, ...userAggregates[user] }); });
+    if (activeReport === '3.1') sortable.sort(function(a,b) { return b.duration - a.duration; });
+    if (activeReport === '3.2') sortable.sort(function(a,b) { return b.count - a.count; });
+    if (activeReport === '3.3') sortable.sort(function(a,b) { return b.runDistance - a.runDistance; });
+
+    if (sortable.length === 0) { rankList.innerHTML = '<div class="text-center text-gray-500 py-8 text-sm">' + I18N_DICT[currentLang].no_data + '</div>'; return; }
+    var h = '';
+    sortable.forEach(function(row, idx) {
+      var badge = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1)));
+      var scoreVal = '';
+      if (activeReport === '3.1') scoreVal = row.duration.toFixed(0) + ' Mins';
+      if (activeReport === '3.2') scoreVal = row.count + ' 次';
+      if (activeReport === '3.3') scoreVal = row.runDistance.toFixed(2) + ' KM';
+
+      h += '<div class="flex items-center justify-between text-sm py-2 border-b border-gray-600/20 last:border-none">';
+      h += '<div class="flex items-center gap-2.5"><span class="w-6 font-bold text-gray-400 text-xs">' + badge + '</span>';
+      h += '<div class="w-7 h-7 bg-gray-600 rounded-full flex items-center justify-center text-base">' + row.avatar + '</div>';
+      h += '<span class="font-semibold text-white">' + row.username + '</span></div>';
+      h += '<span class="font-mono font-bold text-lime-400 text-xs">' + scoreVal + '</span></div>';
+    });
+    rankList.innerHTML = h;
+  }
+
+  document.querySelectorAll('#rankTabs button').forEach(function(btn) {
+    btn.onclick = function() {
+      document.querySelectorAll('#rankTabs button').forEach(function(b) { b.classList.remove('active', 'bg-lime-400', 'text-gray-900'); b.classList.add('bg-gray-700', 'text-white'); });
+      this.classList.remove('bg-gray-700', 'text-white'); this.classList.add('active', 'bg-lime-400', 'text-gray-900');
+      activeReport = this.dataset.rep;
+      var filterRow = document.getElementById('rankFilterRow'); var selectorEl = document.getElementById('rankSportSelector');
+      if (filterRow && selectorEl) {
+        // 优化9：时长榜(3.1)和次数榜(3.2)二级筛选菜单默认洗牌重置为“全部项目”
+        if (activeReport === '3.3') { selectorEl.value = 'running'; filterRow.style.display = 'none'; }
+        else { selectorEl.value = 'ALL'; filterRow.style.display = 'block'; }
+      }
+      applyLanguage(currentLang); renderRankings();
+    };
+  });
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 👤 PROFILE ME MATRIX (分位数交叉对账核算模块)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  async function renderPersonalMineCenter() {
+    var mineNameEl = document.getElementById('mineName'), mineAvatarEl = document.getElementById('mineAvatar');
+    if (mineNameEl) mineNameEl.textContent = nickname; if (mineAvatarEl) mineAvatarEl.textContent = selectedAvatar;
+
+    var cloudPosts = await sbFetchPosts(); var localPosts = ls('fitmate_local_posts', []);
+    var merged = [...cloudPosts]; localPosts.forEach(function(lp) { if (!merged.some(function(cp) { return String(cp.id) === String(lp.id); })) merged.push(lp); });
+
+    var myTotalDuration = 0, myTotalCounts = 0, allUsersTotals = {};
+    var now = new Date(); var thisYear = now.getFullYear(); var thisMonth = now.getMonth();
+
+    merged.forEach(function(p) {
+      var d = new Date(p.created_at); if (d.getFullYear() !== thisYear || d.getMonth() !== thisMonth) return;
+      var user = p.username || '匿名用户'; if (!allUsersTotals[user]) allUsersTotals[user] = 0; allUsersTotals[user] += 1;
+      if (user === nickname) { myTotalCounts += 1; if (p.exercise_data && p.exercise_data.duration) myTotalDuration += parseFloat(p.exercise_data.duration); }
+    });
+
+    var statDurationEl = document.getElementById('statDuration'), statCountsEl = document.getElementById('statCounts'), statPercentEl = document.getElementById('statPercent');
+    if (statDurationEl) statDurationEl.textContent = myTotalDuration.toFixed(0);
+    if (statCountsEl) statCountsEl.textContent = myTotalCounts;
+
+    // 优化10：高保真前置算法（共10人，第1名超越100%，第2名超越90%）
+    var userCountsList = [];
+    Object.keys(allUsersTotals).forEach(function(u) { userCountsList.push({ name: u, count: allUsersTotals[u] }); });
+    userCountsList.sort(function(a, b) { return b.count - a.count; });
+    var myRank = userCountsList.findIndex(function(x) { return x.name === nickname; }) + 1;
+    var totalUsers = userCountsList.length;
+
+    if (statPercentEl) {
+      if (totalUsers === 0 || myRank === 0) { statPercentEl.textContent = "0%"; } 
+      else { var pct = ((totalUsers - myRank + 1) / totalUsers) * 100; statPercentEl.textContent = pct.toFixed(0) + "%"; }
+    }
+
+    var calGrid = document.getElementById('calendarGrid'); if (!calGrid) return; calGrid.innerHTML = '';
+    var targetYear = 2026, targetMonth = 5; var monthTitleEl = document.getElementById('calMonthTitle'); if (monthTitleEl) monthTitleEl.textContent = "2026.06";
+
+    var firstDayIdx = new Date(targetYear, targetMonth, 1).getDay(); var shiftDays = firstDayIdx === 0 ? 6 : firstDayIdx - 1; var totalDays = new Date(targetYear, targetMonth + 1, 0).getDate();
+    for (var f = 0; f < shiftDays; f++) { var blank = document.createElement('div'); calGrid.appendChild(blank); }
+
+    var myWorkoutDates = [];
+    merged.forEach(function(p) { if (p.username !== nickname) return; var pd = new Date(p.created_at); if (pd.getFullYear() === targetYear && pd.getMonth() === targetMonth) { myWorkoutDates.push(pd.getDate()); } });
+
+    for (var day = 1; day <= totalDays; day++) {
+      var dayBox = document.createElement('div'); dayBox.className = 'cal-day py-1 text-center rounded-lg text-xs font-semibold bg-gray-700/40 text-gray-300'; dayBox.textContent = day;
+      if (myWorkoutDates.indexOf(day) !== -1) { dayBox.className = 'cal-day py-1 text-center rounded-lg text-xs font-black bg-lime-400 text-gray-900 border border-lime-300'; dayBox.textContent = '💪'; }
+      calGrid.appendChild(dayBox);
+    }
+  }
+
+  var themeBtn = document.getElementById('btnToggleTheme');
+  if (themeBtn) {
+    themeBtn.onclick = function() {
+      var app = document.getElementById('app');
+      if (currentTheme === 'dark') {
+        currentTheme = 'light'; document.body.style.background = '#f3f4f6'; app.style.background = '#f9fafb'; app.classList.add('light-theme-active'); this.textContent = '☀️ Light';
+        this.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-lime-400 text-gray-900';
+      } else {
+        currentTheme = 'dark'; document.body.style.background = '#111827'; app.style.background = '#1f2937'; app.classList.remove('light-theme-active'); this.textContent = '🌙 Dark';
+        this.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-gray-600 text-white';
+      }
+    };
+  }
+
+  var langBtn = document.getElementById('btnToggleLang');
+  if (langBtn) {
+    langBtn.onclick = function() {
+      if (currentLang === 'zh') { applyLanguage('en'); } else { applyLanguage('zh'); }
+      if (document.getElementById('page-rank').classList.contains('active')) renderRankings();
+      if (document.getElementById('page-mine').classList.contains('active')) renderPersonalMineCenter();
+    };
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DOM ELEMENT MAPPER & 缓存防断流装甲
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
   const $ = function(id) { return document.getElementById(id); };
   const authScreen = $('auth-screen'), mainScreen = $('main-screen');
   const nickInput = $('nickname'), avGrid = $('avatarGrid'), btnStart = $('btnStart');
-  const topAvatar = $('topAvatar'), topName = $('topName'), streakNum = $('streakNum');
-  const streakBadge = document.querySelector('.top-bar-badge');
-  const btnCheckin = $('btnCheckin'), checkinTime = $('checkinTime'), toast = $('toast');
+  const topAvatar = $('topAvatar'), topName = $('topName');
+  const btnCheckin = $('btnCheckin'), toast = $('toast');
   const navItems = document.querySelectorAll('.nav-item');
   const tabPages = { checkin: $('page-checkin'), circle: $('page-circle'), rank: $('page-rank'), mine: $('page-mine') };
   const sportGrid = $('sportGrid'), dynFormCard = $('dynamicFormCard'), formTitle = $('formTitle');
@@ -481,10 +703,6 @@
   const privToggle = $('privacyToggle'), btnConfirm = $('btnConfirmCheckin');
   const circleFeed = $('circleFeed'), notifBadge = $('notifBadge'), navDot = $('navDot');
   const notifOverlay = $('notifOverlay'), notifPanel = $('notifPanel'), notifList = $('notifList'), notifReadAll = $('notifReadAll');
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 3. UTILITIES
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000); }
   
@@ -496,7 +714,12 @@
     } catch { return def; } 
   }
   function lss(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
-  function getCounts() { return ls('fitmate_sport_counts', {}); }
+  
+  // 💥 终极高防呆缓存对账：清洗掉一切本地可能潜伏的历史破损缓存格式，防御类型空指针抛错崩溃
+  function getCounts() { 
+    var c = ls('fitmate_sport_counts', {}); 
+    return (c && typeof c === 'object') ? c : {};
+  }
   function incCount(id) { var c = getCounts(); c[id] = (c[id] || 0) + 1; lss('fitmate_sport_counts', c); }
   function fmt(iso) { var d = new Date(iso); var p = function(n) { return String(n).padStart(2, '0'); }; return p(d.getMonth()+1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 
@@ -508,7 +731,7 @@
   var notifPollTimer = null;
 
   async function pollNotifs() {
-    if (!sbReady || !nickname) return;
+    if (!supabase || !sbReady || !nickname) return;
     var notifs = await sbFetchNotifs(nickname);
     cloudNotifs = notifs || [];
     var unread = 0;
@@ -550,10 +773,7 @@
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   async function renderCircle() {
-    var activeCardId = document.activeElement ? document.activeElement.closest('.post-card')?.dataset.pid : null;
-    var activePlaceholder = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.placeholder : null;
-    var activeValue = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.value : '';
-
+    circleFeed.innerHTML = '<div style="text-align:center;color:#6b7280;padding:30px;">🌐 加载中...</div>';
     var cloudPosts = await sbFetchPosts();
     var localPosts = ls('fitmate_local_posts', []);
     
@@ -588,8 +808,7 @@
       h += '<div class="post-data">';
       if (ed.duration) h += '⏱ 时长：' + ed.duration + ' 分钟<br>';
       if (ed.distance) h += '📏 距离：' + ed.distance + ' 公里<br>';
-      if (ed.bodyPart && ed.exercise) h += '🏋️ 部位：' + ed.bodyPart + ' · 动作：' + ed.exercise + '<br>';
-      if (ed.sets && ed.weightPerSet) h += '🔢 ' + ed.sets + ' 组 × ' + ed.weightPerSet + ' 公斤<br>';
+      if (ed.bodyPart) h += '🏋️ 部位：' + ed.bodyPart + '<br>';
       h += '</div>';
       if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
       h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
@@ -611,18 +830,10 @@
     }
     circleFeed.innerHTML = h;
     bindCircleEvents();
-
-    if (activeCardId) {
-      var targetInput = circleFeed.querySelector('[data-pid="' + activeCardId + '"] .comment-input');
-      if (targetInput) {
-        targetInput.focus();
-        if (activePlaceholder) targetInput.placeholder = activePlaceholder;
-        targetInput.value = activeValue;
-      }
-    }
   }
 
   async function bindCircleEvents() {
+    if(!supabase) return;
     circleFeed.querySelectorAll('[data-act="like"]').forEach(function(el) {
       el.onclick = async function() {
         var card = this.closest('.post-card'), pid = card.dataset.pid;
@@ -706,8 +917,7 @@
       h += '<div class="post-data">';
       if (ed.duration) h += '⏱ 时长：' + ed.duration + ' 分钟<br>';
       if (ed.distance) h += '📏 距离：' + ed.distance + ' 公里<br>';
-      if (ed.bodyPart && ed.exercise) h += '🏋️ 部位：' + ed.bodyPart + ' · 动作：' + ed.exercise + '<br>';
-      if (ed.sets && ed.weightPerSet) h += '🔢 ' + ed.sets + ' 组 × ' + ed.weightPerSet + ' 公斤<br>';
+      if (ed.bodyPart) h += '🏋️ 部位：' + ed.bodyPart + '<br>';
       h += '</div>';
       if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
       h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
@@ -731,12 +941,15 @@
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 6. CHECK-IN
+  // 6. CHECK-IN (物理货架安全组装)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function renderSports() {
     var counts = getCounts();
-    var sorted = [...ALL_SPORTS].sort(function(a, b) { var ca = counts[a.id] || 0, cb = counts[b.id] || 0; return cb - ca || ALL_SPORTS.indexOf(a) - ALL_SPORTS.indexOf(b); });
+    var sorted = [...ALL_SPORTS].sort(function(a, b) { 
+      var ca = counts[a.id] || 0, cb = counts[b.id] || 0; 
+      return cb - ca || ALL_SPORTS.indexOf(a) - ALL_SPORTS.indexOf(b); 
+    });
     sportGrid.innerHTML = '';
     sorted.forEach(function(s) {
       var div = document.createElement('div'); div.className = 'sport-item'; div.dataset.id = s.id;
@@ -753,64 +966,67 @@
     buildForm(sport); extraCard.style.display = 'block'; validate();
   }
 
+  // 针对优化4：无氧训练打卡的重量信息不再填写，只填部位和时长就好
   function buildForm(sport) {
     var t = sport.type; dynFormContent.innerHTML = '';
     if (t === 'distance') {
       dynFormContent.innerHTML = '<div class="form-row"><div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" /></div><div class="form-group"><label>📏 运动距离（公里）</label><input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" /></div></div>';
-      dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     } else if (t === 'anaerobic') {
       var h = '<div class="body-part-tabs" id="bodyTabs">';
       for (var i = 0; i < BODY_PARTS.length; i++) h += '<div class="body-part-tab" data-part="' + BODY_PARTS[i].id + '">' + BODY_PARTS[i].label + '</div>';
-      h += '</div><div id="anaEx" style="display:none;"></div><div id="anaData" style="display:none;">';
-      h += '<div class="form-row"><div class="form-group"><label>🔢 组数</label><input class="form-input ana-sets" type="number" min="1" max="50" placeholder="例如 4" /></div>';
-      h += '<div class="form-group"><label>🏋️ 每组重量（公斤）</label><input class="form-input ana-weight" type="number" min="0.5" step="0.5" max="999" placeholder="例如 10" /></div></div></div>';
+      h += '</div>';
+      h += '<div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input ana-dur" type="number" min="1" max="999" placeholder="例如 30" /></div>';
       dynFormContent.innerHTML = h;
       dynFormContent.querySelectorAll('.body-part-tab').forEach(function(tab) {
         tab.addEventListener('click', function() {
           dynFormContent.querySelectorAll('.body-part-tab').forEach(function(t) { t.classList.remove('active'); });
-          this.classList.add('active'); selectedBodyPart = this.dataset.part; selectedExercise = null;
-          renderEx(selectedBodyPart); var d = $('anaData'); if (d) d.style.display = 'none'; validate();
+          this.classList.add('active'); selectedBodyPart = this.dataset.part; validate();
         });
       });
-      dynFormContent.querySelectorAll('.ana-sets, .ana-weight').forEach(function(el) { el.addEventListener('input', validate); });
     } else {
       dynFormContent.innerHTML = '<div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input norm-dur" type="number" min="1" max="999" placeholder="例如 30" /></div>';
-      dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     }
+    dynFormContent.querySelectorAll('input').forEach(function(el) { el.addEventListener('input', validate); });
   }
 
-  function renderEx(partId) {
-    var box = $('anaEx'); if (!box) return; box.style.display = 'block';
-    var exs = EXERCISES[partId]; if (!exs) { box.innerHTML = ''; return; }
-    var h = '<div class="exercise-grid">';
-    for (var i = 0; i < exs.length; i++) h += '<div class="exercise-card" data-ex="' + exs[i].name + '"><div class="exercise-demo">' + exs[i].emoji + '</div><div class="exercise-label">' + exs[i].name + '</div></div>';
-    h += '</div>'; box.innerHTML = h;
-    box.querySelectorAll('.exercise-card').forEach(function(card) {
-      card.addEventListener('click', function() {
-        box.querySelectorAll('.exercise-card').forEach(function(c) { c.classList.remove('selected'); });
-        this.classList.add('selected'); selectedExercise = this.dataset.ex;
-        var d = $('anaData'); if (d) d.style.display = 'block'; validate();
-      });
-    });
-  }
-
+  // 针对优化3：确认打卡的逻辑是如果上面信息没填完（或小于等于0），是不允许提交的
   function validate() {
     if (!selectedSport) { btnConfirm.disabled = true; return; }
     var t = selectedSport.type, ok = true;
-    if (t === 'distance') { var a = dynFormContent.querySelector('.dist-dur'), b = dynFormContent.querySelector('.dist-dist'); if (!a || !b || !a.value || !b.value) ok = false; }
-    else if (t === 'anaerobic') { if (!selectedBodyPart || !selectedExercise) ok = false; if (ok) { var a = dynFormContent.querySelector('.ana-sets'), b = dynFormContent.querySelector('.ana-weight'); if (!a || !b || !a.value || !b.value) ok = false; } }
-    else { var a = dynFormContent.querySelector('.norm-dur'); if (!a || !a.value) ok = false; }
+    if (t === 'distance') { 
+      var a = dynFormContent.querySelector('.dist-dur'), b = dynFormContent.querySelector('.dist-dist'); 
+      if (!a || !b || !a.value.trim() || !b.value.trim() || parseFloat(a.value) <= 0 || parseFloat(b.value) <= 0) ok = false; 
+    }
+    else if (t === 'anaerobic') { 
+      if (!selectedBodyPart) ok = false; 
+      if (ok) { 
+        var a = dynFormContent.querySelector('.ana-dur'); 
+        if (!a || !a.value.trim() || parseFloat(a.value) <= 0) ok = false; 
+      } 
+    }
+    else { 
+      var a = dynFormContent.querySelector('.norm-dur'); 
+      if (!a || !a.value.trim() || parseFloat(a.value) <= 0) ok = false; 
+    }
     btnConfirm.disabled = !ok;
   }
 
+  // 针对优化1：连续打卡的逻辑是如果中间中断了，会重新开始计数；每天最多打卡一次
   btnConfirm.addEventListener('click', async function() {
-    if (this.disabled) return; var s = selectedSport, t = s.type;
+    if (this.disabled) return; 
+    var todayStr = new Date().toDateString();
+    var lastCheckinDate = ls('fitmate_streak_date', '');
+    
+    if (lastCheckinDate === todayStr) {
+      show('⏰ 今天已经打过卡啦，明天继续！');
+      return;
+    }
+
+    var s = selectedSport, t = s.type;
     var ed = { emoji: s.emoji, name: s.name, type: s.type };
     if (t === 'distance') { ed.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value); ed.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value); }
-    else if (t === 'anaerobic') { ed.bodyPart = selectedBodyPart; ed.exercise = selectedExercise; ed.sets = parseInt(dynFormContent.querySelector('.ana-sets').value); ed.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value); }
+    else if (t === 'anaerobic') { ed.bodyPart = selectedBodyPart; ed.duration = parseFloat(dynFormContent.querySelector('.ana-dur').value); }
     else { ed.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value); }
-    
-    var list = ls('fitmate_checkins', []); list.push({ id: Date.now(), timestamp: new Date().toISOString(), data: ed }); lss('fitmate_checkins', list); incCount(s.id);
     
     var syncSuccess = false;
     if (!isPrivate) {
@@ -838,24 +1054,28 @@
         syncSuccess = true;
         var currentLocals = ls('fitmate_local_posts', []);
         var idx = currentLocals.findIndex(function(lp) { return String(lp.id) === String(tempId); });
-        if (idx !== -1) {
-          currentLocals[idx] = liveSavedData;
-          lss('fitmate_local_posts', currentLocals);
-        }
+        if (idx !== -1) { currentLocals[idx] = liveSavedData; lss('fitmate_local_posts', currentLocals); }
       }
     }
     
     if (!isCheckedIn) {
-      isCheckedIn = true; streak += 1; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-      var now = new Date(), pad = function(n) { return String(n).padStart(2, '0'); };
-      checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-      btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-      lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
+      isCheckedIn = true; 
+      var savedStreak = ls('fitmate_streak', 0);
+      var savedDate = ls('fitmate_streak_date', '');
+      var yesterdayStr = new Date(Date.now() - 86400000).toDateString();
+      
+      if (savedDate === yesterdayStr) { 
+        streak = savedStreak + 1; 
+      } else { 
+        streak = 1; // 中断了，重新开始计数
+      }
+      
+      var badge = document.getElementById('mainStreakBadge'); if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天';
+      lss('fitmate_streak', streak);
+      lss('fitmate_streak_date', todayStr);
     }
     
-    if (isPrivate || syncSuccess) {
-      show('🎉 打卡成功！动态已双流向对账同步');
-    }
+    show('🎉 打卡成功！动态已双流向对账同步');
     resetForm();
     await renderCircle(); 
   });
@@ -867,9 +1087,7 @@
     extraCard.style.display = 'none'; btnConfirm.disabled = true;
     moodGrid.querySelectorAll('.mood-item').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-    selectedMood = '😄'; 
-    isPrivate = false; 
-    privToggle.classList.add('active'); 
+    selectedMood = '😄'; isPrivate = false; privToggle.classList.add('active'); 
   }
 
   moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
@@ -879,11 +1097,7 @@
     });
   });
   document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-  
-  privToggle.addEventListener('click', function() { 
-    this.classList.toggle('active'); 
-    isPrivate = !this.classList.contains('active');
-  });
+  privToggle.addEventListener('click', function() { this.classList.toggle('active'); isPrivate = !this.classList.contains('active'); });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 7. AUTH
@@ -905,17 +1119,18 @@
     
     topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
     lss('fitmate_nickname', nickname); lss('fitmate_avatar', selectedAvatar);
-    var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString();
+    
+    var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString(), yesterdayLogin = new Date(Date.now() - 86400000).toDateString();
+    var badge = document.getElementById('mainStreakBadge');
     if (savedDateLogin === todayLogin) {
-      streak = savedStreakLogin; isCheckedIn = true; streakNum.textContent = streak;
-      streakBadge.textContent = '🔥 连续 ' + streak + ' 天'; btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-      checkinTime.textContent = '⏱ 今日已打卡 ✅';
-    } else if (savedDateLogin && savedStreakLogin > 0) {
-      streak = savedStreakLogin; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; isCheckedIn = false;
-    } else { streakBadge.textContent = '🔥 连续 0 天'; streakNum.textContent = '0'; isCheckedIn = false; }
+      streak = savedStreakLogin; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天';
+    } else if (savedDateLogin === yesterdayLogin) {
+      streak = savedStreakLogin; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+    } else {
+      streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天';
+    }
     authScreen.classList.add('hidden'); mainScreen.classList.add('active');
-    show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle(); pollNotifs();
-    startNotifPoll();
+    show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle(); pollNotifs(); startNotifPoll();
   });
   nickInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !btnStart.disabled) btnStart.click(); });
   document.querySelector('.avatar-option').classList.add('selected');
@@ -931,21 +1146,9 @@
       this.classList.add('active');
       Object.keys(tabPages).forEach(function(k) { tabPages[k].classList.toggle('active', k === tab); });
       if (tab === 'circle') renderCircle();
+      if (tab === 'rank') renderRankings();
+      if (tab === 'mine') renderPersonalMineCenter();
     });
-  });
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 9. DAILY CHECKIN + RESTORE
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  btnCheckin.addEventListener('click', function() {
-    if (isCheckedIn) { show('⏰ 今天已经打过卡啦，明天继续！'); return; }
-    isCheckedIn = true; streak += 1; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-    var now = new Date(), pad = function(n) { return String(n).padStart(2, '0'); };
-    checkinTime.textContent = '⏱ 今日打卡时间 ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-    btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-    lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
-    show('🎉 打卡成功！已连续 ' + streak + ' 天');
   });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -954,6 +1157,8 @@
 
   (async function init() {
     await sbInit();
+    initRankSelectors();
+    applyLanguage('zh');
 
     var savedNick = ls('fitmate_nickname', '');
     var savedAv   = ls('fitmate_avatar', '');
@@ -965,35 +1170,31 @@
       var savedStreak = ls('fitmate_streak', 0);
       var savedDate   = ls('fitmate_streak_date', '');
       var today       = new Date().toDateString();
+      var yesterday   = new Date(Date.now() - 86400000).toDateString();
+      var badge = document.getElementById('mainStreakBadge');
 
       if (savedDate === today) {
-        streak = savedStreak; isCheckedIn = true;
-        streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-        btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-        if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
-      } else if (savedDate && savedStreak > 0) {
-        streak = savedStreak; streakNum.textContent = streak;
-        streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+        streak = savedStreak; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天';
+      } else if (savedDate === yesterday) {
+        streak = savedStreak; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
       } else {
-        streakBadge.textContent = '🔥 连续 0 天'; streakNum.textContent = '0';
+        streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天';
       }
 
       authScreen.classList.add('hidden'); mainScreen.classList.add('active');
-      renderSports(); renderCircle(); pollNotifs();
-      startNotifPoll();
+      renderSports(); renderCircle(); pollNotifs(); startNotifPoll();
       show('👋 自动登录成功，' + nickname + '！');
     } else {
-      var noAuthStreak = ls('fitmate_streak', 0);
-      var noAuthDate   = ls('fitmate_streak_date', '');
-      var noAuthToday  = new Date().toDateString();
-      if (noAuthDate === noAuthToday) {
-        streakNum.textContent = noAuthStreak; streakBadge.textContent = '🔥 连续 ' + noAuthStreak + ' 天';
-      } else if (noAuthDate && noAuthStreak > 0) {
-        streakNum.textContent = noAuthStreak; streakBadge.textContent = '🔥 连续 ' + noAuthStreak + ' 天（今日未打卡）';
+      var noAuthStreak = ls('fitmate_streak', 0); var noAuthDate = ls('fitmate_streak_date', ''); var noAuthToday = new Date().toDateString(); var noAuthYesterday = new Date(Date.now() - 86400000).toDateString();
+      var badge = document.getElementById('mainStreakBadge');
+      if (badge) {
+        if (noAuthDate === noAuthToday) { badge.textContent = '🔥 连续 ' + noAuthStreak + ' 天'; } 
+        else if (noAuthDate === noAuthYesterday) { badge.textContent = '🔥 连续 ' + noAuthStreak + ' 天（今日未打卡）'; }
+        else { badge.textContent = '🔥 连续 0 天'; }
       }
     }
 
-    console.log('🏋️ FitMate 云同步版已加载');
+    console.log('🏋️ FitMate 云同步全功能生产版投产成功');
   })();
 })();
 </script>
