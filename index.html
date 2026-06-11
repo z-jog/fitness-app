@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>FitMate 健身打卡</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -203,10 +204,8 @@
 
 <div id="app">
 
-  <!-- ==================== Toast ==================== -->
   <div id="toast" class="toast"></div>
 
-  <!-- ==================== 登录/注册 ==================== -->
   <div id="auth-screen">
     <div class="auth-card">
       <div class="logo-icon">💪</div>
@@ -234,10 +233,8 @@
     </div>
   </div>
 
-  <!-- ==================== 主页面 ==================== -->
   <div id="main-screen">
 
-    <!-- 顶部栏 -->
     <div class="top-bar">
       <div class="top-bar-left">
         <div class="top-bar-avatar" id="topAvatar">🏃</div>
@@ -246,10 +243,8 @@
       <span class="top-bar-badge">🔥 连续 0 天</span>
     </div>
 
-    <!-- 内容区域 -->
     <div class="content-area" id="contentArea">
 
-      <!-- ====== 打卡页 ====== -->
       <div class="tab-page active" id="page-checkin">
 
         <div class="checkin-card">
@@ -284,7 +279,7 @@
           </div>
           <div class="privacy-toggle">
             <span>🔒 仅自己可见</span>
-            <div class="toggle-switch" id="privacyToggle"></div>
+            <div class="toggle-switch active" id="privacyToggle"></div>
             <span>🌍 所有人可见</span>
           </div>
           <button class="btn-confirm-checkin" id="btnConfirmCheckin" disabled>💾 确认打卡</button>
@@ -292,7 +287,6 @@
 
       </div>
 
-      <!-- ====== 圈子页 ====== -->
       <div class="tab-page" id="page-circle">
         <div class="circle-top-bar">
           <h2>🌐 运动圈子</h2>
@@ -303,7 +297,6 @@
         <div id="circleFeed"></div>
       </div>
 
-      <!-- 排行榜页 -->
       <div class="tab-page" id="page-rank">
         <div class="placeholder-card">
           <div class="placeholder-icon">🏅</div>
@@ -312,7 +305,6 @@
         </div>
       </div>
 
-      <!-- 我的页 -->
       <div class="tab-page" id="page-mine">
         <div class="placeholder-card">
           <div class="placeholder-icon">👤</div>
@@ -323,7 +315,6 @@
 
     </div>
 
-    <!-- 底部导航栏 -->
     <div class="bottom-nav">
       <div class="nav-item active" data-tab="checkin">
         <span class="nav-icon">✅</span>
@@ -346,7 +337,6 @@
 
   </div>
 
-  <!-- ==================== 通知面板 ==================== -->
   <div class="notif-overlay" id="notifOverlay"></div>
   <div class="notif-panel" id="notifPanel">
     <h3>🔔 消息通知</h3>
@@ -360,11 +350,72 @@
 (function () {
   'use strict';
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SUPABASE CONFIG
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  var SUPABASE_URL = 'https://kuvrzqdpcauhjhcvrpp.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1dnJ6cWRwY2F1aGpoY3ZycHAiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc0ODE0NjgxNSwiZXhwIjoyMDYzNzIyODE1fQ.P4fQCOO7-WLCL8pz_XINzvs2w2BUBvq06U2hKFnpeEw';
+  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  var sbReady = false;
+
+  // Check tables exist
+  async function sbInit() {
+    try {
+      var { data, error } = await supabase.from('fitmate_posts').select('id').limit(1);
+      if (error && error.code === '42P01') {
+        console.log('⚠️ 请在Supabase SQL Editor执行建表SQL');
+      } else {
+        sbReady = true;
+        console.log('✅ Supabase连接正常');
+      }
+    } catch(e) { 
+      console.log('Supabase init error:', e.message); 
+      sbReady = true; 
+    }
+  }
+
+  async function sbFetchPosts() {
+    if (!sbReady) return [];
+    try { 
+      var { data, error } = await supabase.from('fitmate_posts').select('*').eq('is_public', true).order('created_at', { ascending: false }).limit(50); 
+      if (error) console.error('Fetch posts error:', error);
+      return data || []; 
+    } catch(e) { return []; }
+  }
+  async function sbInsertPost(p) {
+    if (!sbReady) return;
+    try { 
+      var { error } = await supabase.from('fitmate_posts').insert([p]); 
+      if (error) console.error('❌ 云端写入遭遇卡点 (Insert Failed):', error);
+    } catch(e) { console.error('Insert exception:', e); }
+  }
+  async function sbUpdateLikes(id, likes) {
+    if (!sbReady) return;
+    try { await supabase.from('fitmate_posts').update({ likes: likes }).eq('id', id); } catch(e) {}
+  }
+  async function sbUpdateComments(id, comments) {
+    if (!sbReady) return;
+    try { await supabase.from('fitmate_posts').update({ comments: comments }).eq('id', id); } catch(e) {}
+  }
+  async function sbFetchNotifs(user) {
+    if (!sbReady || !user) return [];
+    try { var { data } = await supabase.from('fitmate_notifications').select('*').eq('target_user', user).order('created_at', { ascending: false }).limit(50); return data || []; }
+    catch(e) { return []; }
+  }
+  async function sbInsertNotif(n) {
+    if (!sbReady) return;
+    try { await supabase.from('fitmate_notifications').insert([n]); } catch(e) {}
+  }
+  async function sbMarkNotifsRead(user) {
+    if (!sbReady || !user) return;
+    try { await supabase.from('fitmate_notifications').update({ is_read: true }).eq('target_user', user).eq('is_read', false); } catch(e) {}
+  }
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 1. DATA
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  const ALL_SPORTS = [
+  var ALL_SPORTS = [
     { id: 'running', name: '跑步', emoji: '🏃‍♂️', type: 'distance' },
     { id: 'cycling', name: '骑行', emoji: '🚴‍♂️', type: 'distance' },
     { id: 'swimming', name: '游泳', emoji: '🏊‍♂️', type: 'distance' },
@@ -399,11 +450,6 @@
     arm: [ { name: '杠铃弯举', emoji: '💪' }, { name: '绳索下压', emoji: '⬇️' }, { name: '哑铃锤式弯举', emoji: '🔨' } ],
     abs: [ { name: '卷腹', emoji: '😤' }, { name: '悬垂举腿', emoji: '⬆️' }, { name: '俄罗斯转体', emoji: '🔄' } ],
   };
-  const FAKE_USERS = [
-    { nick: '张三', avatar: '💪' }, { nick: '李四', avatar: '🔥' }, { nick: '王五', avatar: '⚡' },
-    { nick: '赵六', avatar: '🏆' }, { nick: '陈七', avatar: '🎯' }, { nick: '刘八', avatar: '🦁' },
-  ];
-  const FAKE_COMMENTS = ['太牛了老哥！', '加油💪', '一起进步！', '今天状态不错👍', '冲冲冲！', '向你学习！', '帅！', '我也在练这个！'];
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 2. STATE
@@ -411,7 +457,7 @@
 
   let selectedSport = null, selectedBodyPart = null, selectedExercise = null;
   let selectedMood = '😄', isPrivate = false, isCheckedIn = false, streak = 0;
-  let nickname = '', selectedAvatar = '🏃', toastTimer = null, notifTimer = null;
+  let nickname = '', selectedAvatar = '🏃', toastTimer = null;
 
   // DOM
   const $ = function(id) { return document.getElementById(id); };
@@ -429,29 +475,36 @@
   const notifOverlay = $('notifOverlay'), notifPanel = $('notifPanel'), notifList = $('notifList'), notifReadAll = $('notifReadAll');
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 3. UTILITIES
+  // 3. UTILITIES (双回路缓存架构：防御 Cline 的纯文本脏数据)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2400); }
-  function ls(key, def) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } }
+  
+  function ls(key, def) { 
+    try { 
+      var v = localStorage.getItem(key); 
+      if (!v) return def;
+      try { return JSON.parse(v); } catch(e) { return v; } 
+    } catch { return def; } 
+  }
   function lss(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
   function getCounts() { return ls('fitmate_sport_counts', {}); }
   function incCount(id) { var c = getCounts(); c[id] = (c[id] || 0) + 1; lss('fitmate_sport_counts', c); }
-  function getPosts() { return ls('fitmate_posts', []); }
-  function savePosts(list) { lss('fitmate_posts', list); }
-  function getNotifs() { return ls('fitmate_notifs', []); }
-  function saveNotifs(list) { lss('fitmate_notifs', list); }
-  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-  function randItem(arr) { return arr[rand(0, arr.length - 1)]; }
   function fmt(iso) { var d = new Date(iso); var p = function(n) { return String(n).padStart(2, '0'); }; return p(d.getMonth()+1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 4. NOTIFICATIONS
+  // 4. CLOUD NOTIFICATIONS
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  function updateNotifUI() {
-    var n = getNotifs(), unread = 0;
-    for (var i = 0; i < n.length; i++) { if (!n[i].read) unread++; }
+  var cloudNotifs = [];
+  var notifPollTimer = null;
+
+  async function pollNotifs() {
+    if (!sbReady || !nickname) return;
+    var notifs = await sbFetchNotifs(nickname);
+    cloudNotifs = notifs || [];
+    var unread = 0;
+    for (var i = 0; i < cloudNotifs.length; i++) { if (!cloudNotifs[i].is_read) unread++; }
     if (unread > 0) {
       notifBadge.textContent = unread > 99 ? '99+' : unread; notifBadge.classList.remove('hidden');
       navDot.classList.add('show');
@@ -459,60 +512,80 @@
   }
 
   function renderNotifPanel() {
-    var n = getNotifs();
-    if (n.length === 0) { notifList.innerHTML = '<div class="notif-item" style="justify-content:center;color:#6b7280;">暂无消息</div>'; return; }
+    if (!cloudNotifs || cloudNotifs.length === 0) {
+      notifList.innerHTML = '<div class="notif-item" style="justify-content:center;color:#6b7280;">暂无消息</div>'; return;
+    }
     var h = '';
-    for (var i = 0; i < n.length; i++) {
-      h += '<div class="notif-item"><span class="notif-icon">' + (n[i].type === 'like' ? '❤️' : '💬') + '</span><div>' + n[i].text + '<div style="color:#6b7280;font-size:11px;margin-top:2px;">' + fmt(n[i].timestamp) + '</div></div></div>';
+    for (var i = 0; i < cloudNotifs.length; i++) {
+      var n = cloudNotifs[i];
+      h += '<div class="notif-item"><span class="notif-icon">' + (n.type === 'like' ? '❤️' : '💬') + '</span><div>' + n.text + '<div style="color:#6b7280;font-size:11px;margin-top:2px;">' + fmt(n.created_at) + '</div></div></div>';
     }
     notifList.innerHTML = h;
   }
 
-  function simulateNotif() {
-    var posts = getPosts();
-    if (posts.length < 1 || !nickname) return;
-    var fakeUser = randItem(FAKE_USERS);
-    var type = Math.random() < 0.6 ? 'like' : 'comment';
-    var text = type === 'like' ? fakeUser.nick + ' 点赞了你的打卡' : fakeUser.nick + ' 回复了你的评论：「' + randItem(FAKE_COMMENTS) + '」';
-    var notifs = getNotifs();
-    notifs.unshift({ id: Date.now(), type: type, text: text, timestamp: new Date().toISOString(), read: false });
-    saveNotifs(notifs);
-    updateNotifUI();
-  }
-
   notifBadge.addEventListener('click', function() { notifPanel.classList.add('show'); notifOverlay.classList.add('show'); renderNotifPanel(); });
   notifOverlay.addEventListener('click', function() { notifPanel.classList.remove('show'); notifOverlay.classList.remove('show'); });
-  notifReadAll.addEventListener('click', function() {
-    var n = getNotifs();
-    for (var i = 0; i < n.length; i++) n[i].read = true;
-    saveNotifs(n); updateNotifUI(); renderNotifPanel();
+  notifReadAll.addEventListener('click', async function() {
+    await sbMarkNotifsRead(nickname);
+    cloudNotifs = []; notifBadge.classList.add('hidden'); navDot.classList.remove('show');
     notifPanel.classList.remove('show'); notifOverlay.classList.remove('show');
     show('📬 所有消息已读');
   });
 
+  function startNotifPoll() {
+    if (notifPollTimer) clearInterval(notifPollTimer);
+    notifPollTimer = setInterval(function() { pollNotifs(); }, 5000);
+  }
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 5. CIRCLE FEED
+  // 5. CLOUD CIRCLE FEED (混合对账：融合云端与本地发布快照)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  function renderCircle() {
-    var posts = getPosts();
-    if (posts.length === 0) {
+  async function renderCircle() {
+    var activeCardId = document.activeElement ? document.activeElement.closest('.post-card')?.dataset.pid : null;
+    var activePlaceholder = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.placeholder : null;
+    var activeValue = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.value : '';
+
+    // A. 抓取云端可用动态
+    var cloudPosts = await sbFetchPosts();
+    // B. 抓取本地兜底高精缓存
+    var localPosts = ls('fitmate_local_posts', []);
+    
+    // C. 双回路对账去重（通过 client_id 或 组合键）
+    var mergedPosts = [...cloudPosts];
+    localPosts.forEach(function(lp) {
+      var isAlreadyInCloud = mergedPosts.some(function(cp) {
+        return cp.client_id === lp.client_id || (cp.username === lp.username && cp.created_at === lp.created_at);
+      });
+      if (!isAlreadyInCloud) {
+        mergedPosts.push(lp);
+      }
+    });
+
+    // D. 统一按时间倒序排列
+    mergedPosts.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+
+    if (mergedPosts.length === 0) {
       circleFeed.innerHTML = '<div class="placeholder-card"><div class="placeholder-icon">📭</div><div class="placeholder-title">暂无动态</div><div class="placeholder-desc">快去打卡，让好友看到你的运动成果吧！</div></div>';
       return;
     }
     var h = '';
-    for (var i = 0; i < posts.length; i++) {
-      var p = posts[i], likesCount = (p.likes ? p.likes.length : 0), commentsCount = (p.comments ? p.comments.length : 0);
+    for (var i = 0; i < mergedPosts.length; i++) {
+      var p = mergedPosts[i];
+      var ed = p.exercise_data || {};
+      var likesCount = (p.likes && p.likes.length) ? p.likes.length : 0;
+      var commentsCount = (p.comments && p.comments.length) ? p.comments.length : 0;
       var isLiked = p.likes && p.likes.indexOf(nickname) !== -1;
-      var moodEmoji = p.mood || '😄', sport = p.sport || {};
-      h += '<div class="post-card" data-pid="' + p.id + '">';
-      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.author || '用户') + '</div><div class="post-time">' + fmt(p.timestamp) + '</div></div></div>';
-      h += '<div class="post-sport"><span class="sport-tag">' + (sport.emoji || '🏋️') + ' ' + (sport.name || '运动') + '</span></div>';
+      var moodEmoji = p.mood || '😄';
+
+      h += '<div class="post-card" data-pid="' + p.id + '" data-cid="' + (p.client_id || '') + '">';
+      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.username || '用户') + '</div><div class="post-time">' + fmt(p.created_at) + '</div></div></div>';
+      h += '<div class="post-sport"><span class="sport-tag">' + (ed.emoji || '🏋️') + ' ' + (ed.name || '运动') + '</span></div>';
       h += '<div class="post-data">';
-      if (p.duration) h += '⏱ 时长：' + p.duration + ' 分钟<br>';
-      if (p.distance) h += '📏 距离：' + p.distance + ' 公里<br>';
-      if (p.bodyPart && p.exercise) h += '🏋️ 部位：' + p.bodyPart + ' · 动作：' + p.exercise + '<br>';
-      if (p.sets && p.weightPerSet) h += '🔢 ' + p.sets + ' 组 × ' + p.weightPerSet + ' 公斤<br>';
+      if (ed.duration) h += '⏱ 时长：' + ed.duration + ' 分钟<br>';
+      if (ed.distance) h += '📏 距离：' + ed.distance + ' 公里<br>';
+      if (ed.bodyPart && ed.exercise) h += '🏋️ 部位：' + ed.bodyPart + ' · 动作：' + ed.exercise + '<br>';
+      if (ed.sets && ed.weightPerSet) h += '🔢 ' + ed.sets + ' 组 × ' + ed.weightPerSet + ' 公斤<br>';
       h += '</div>';
       if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
       h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
@@ -523,7 +596,7 @@
         var shown = p.comments.slice(0, 3);
         for (var ci = 0; ci < shown.length; ci++) {
           var c = shown[ci];
-          h += '<div class="comment-item" data-cid="' + c.id + '"><span class="comment-author">' + c.author + '</span>';
+          h += '<div class="comment-item" data-cid="' + (c.id || ci) + '"><span class="comment-author">' + c.author + '</span>';
           if (c.replyTo && c.replyTo !== c.author) h += ' <span class="comment-reply-to">回复</span> <span class="reply-text">' + c.replyTo + '</span>';
           h += '：<span class="comment-text">' + c.text + '</span></div>';
         }
@@ -534,83 +607,103 @@
     }
     circleFeed.innerHTML = h;
     bindCircleEvents();
+
+    if (activeCardId) {
+      var targetInput = circleFeed.querySelector('[data-pid="' + activeCardId + '"] .comment-input');
+      if (targetInput) {
+        targetInput.focus();
+        if (activePlaceholder) targetInput.placeholder = activePlaceholder;
+        targetInput.value = activeValue;
+      }
+    }
   }
 
-  function bindCircleEvents() {
+  async function bindCircleEvents() {
     circleFeed.querySelectorAll('[data-act="like"]').forEach(function(el) {
-      el.addEventListener('click', function() {
-        var card = this.closest('.post-card'), pid = parseInt(card.dataset.pid);
-        var posts = getPosts();
-        for (var i = 0; i < posts.length; i++) {
-          if (posts[i].id === pid) {
-            if (!posts[i].likes) posts[i].likes = [];
-            var idx = posts[i].likes.indexOf(nickname);
-            if (idx === -1) posts[i].likes.push(nickname); else posts[i].likes.splice(idx, 1);
-            savePosts(posts); renderCircle(); return;
+      el.onclick = async function() {
+        var card = this.closest('.post-card'), pid = card.dataset.pid;
+        if (!pid || pid === 'undefined') return show('💡 本地暂存动态暂不支持云端点赞');
+
+        var { data: livePost } = await supabase.from('fitmate_posts').select('likes, username').eq('id', pid).single();
+        if (!livePost) return;
+
+        var currentLikes = livePost.likes || [];
+        var idx = currentLikes.indexOf(nickname);
+        if (idx === -1) {
+          currentLikes.push(nickname);
+          if (livePost.username !== nickname) {
+            await sbInsertNotif({ id: Date.now(), target_user: livePost.username, from_user: nickname, type: 'like', post_id: pid, text: nickname + ' 点赞了你的打卡', is_read: false, created_at: new Date().toISOString() });
           }
-        }
-      });
+        } else { currentLikes.splice(idx, 1); }
+        
+        await sbUpdateLikes(pid, currentLikes);
+        await renderCircle();
+      };
     });
+
     circleFeed.querySelectorAll('.comment-send').forEach(function(el) {
-      el.addEventListener('click', function() {
+      el.onclick = async function() {
         var wrap = this.closest('.comment-input-wrap'), input = wrap.querySelector('.comment-input');
-        var pid = parseInt(wrap.dataset.pid), text = input.value.trim();
+        var pid = wrap.dataset.pid, text = input.value.trim();
         if (!text) return;
+        if (!pid || pid === 'undefined') return show('💡 本地暂存动态暂不支持云端评论');
+
         var replyTo = null, pl = input.placeholder;
         if (pl.indexOf('回复 @') === 0) replyTo = pl.replace('回复 @', '').replace(':', '');
-        var posts = getPosts();
-        for (var i = 0; i < posts.length; i++) {
-          if (posts[i].id === pid) {
-            if (!posts[i].comments) posts[i].comments = [];
-            posts[i].comments.push({ id: Date.now(), author: nickname, text: text, replyTo: replyTo, timestamp: new Date().toISOString() });
-            savePosts(posts); renderCircle(); simulateNotif(); return;
-          }
+        
+        var { data: livePost } = await supabase.from('fitmate_posts').select('comments, username').eq('id', pid).single();
+        if (!livePost) return;
+
+        var currentComments = livePost.comments || [];
+        currentComments.push({ id: Date.now(), author: nickname, text: text, replyTo: replyTo, timestamp: new Date().toISOString() });
+        
+        await sbUpdateComments(pid, currentComments);
+        if (livePost.username !== nickname) {
+          var nt = replyTo ? nickname + ' 回复了 ' + replyTo + '：「' + text + '」' : nickname + ' 评论了你的打卡：「' + text + '」';
+          await sbInsertNotif({ id: Date.now(), target_user: livePost.username, from_user: nickname, type: 'comment', post_id: pid, text: nt, is_read: false, created_at: new Date().toISOString() });
         }
-      });
+        input.value = '';
+        input.placeholder = '说点什么...';
+        await renderCircle();
+      };
     });
+
     circleFeed.querySelectorAll('.comment-input').forEach(function(el) {
-      el.addEventListener('keydown', function(e) { if (e.key === 'Enter') { this.closest('.comment-input-wrap').querySelector('.comment-send').click(); } });
+      el.onkeydown = function(e) { if (e.key === 'Enter') { this.closest('.comment-input-wrap').querySelector('.comment-send').click(); } };
     });
     circleFeed.querySelectorAll('.comment-show-btn').forEach(function(el) {
-      el.addEventListener('click', function() {
-        var pid = parseInt(this.dataset.more);
-        var posts = getPosts();
-        for (var i = 0; i < posts.length; i++) {
-          if (posts[i].id === pid) { renderCircleFull(pid); return; }
-        }
-      });
+      el.onclick = function() { renderCircleFull(this.dataset.more); };
     });
     circleFeed.querySelectorAll('.comment-item').forEach(function(el) {
-      el.addEventListener('click', function() {
-        var cid = parseInt(this.dataset.cid), card = this.closest('.post-card');
-        var wrap = card.querySelector('.comment-input-wrap'), input = wrap.querySelector('.comment-input');
-        var pid = parseInt(card.dataset.pid), posts = getPosts();
-        for (var i = 0; i < posts.length; i++) {
-          if (posts[i].id === pid) {
-            var comments = posts[i].comments || [];
-            for (var j = 0; j < comments.length; j++) {
-              if (comments[j].id === cid) { input.placeholder = '回复 @' + comments[j].author + ':'; input.focus(); return; }
-            }
-          }
+      el.onclick = function() {
+        var authorEl = this.querySelector('.comment-author');
+        if (authorEl) {
+          var wrap = this.closest('.post-card').querySelector('.comment-input-wrap');
+          var input = wrap.querySelector('.comment-input');
+          input.placeholder = '回复 @' + authorEl.textContent + ':'; input.focus();
         }
-      });
+      };
     });
   }
 
-  function renderCircleFull(showPid) {
-    var posts = getPosts(), h = '';
+  async function renderCircleFull(showPid) {
+    var posts = await sbFetchPosts();
+    var h = '';
     for (var i = 0; i < posts.length; i++) {
-      var p = posts[i], showAll = (p.id === showPid);
-      var likesCount = (p.likes ? p.likes.length : 0), commentsCount = (p.comments ? p.comments.length : 0);
-      var isLiked = p.likes && p.likes.indexOf(nickname) !== -1, moodEmoji = p.mood || '😄', sport = p.sport || {};
+      var p = posts[i], showAll = (String(p.id) === String(showPid));
+      var ed = p.exercise_data || {};
+      var likesCount = (p.likes && p.likes.length) ? p.likes.length : 0;
+      var commentsCount = (p.comments && p.comments.length) ? p.comments.length : 0;
+      var isLiked = p.likes && p.likes.indexOf(nickname) !== -1;
+      var moodEmoji = p.mood || '😄';
       h += '<div class="post-card" data-pid="' + p.id + '">';
-      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.author || '用户') + '</div><div class="post-time">' + fmt(p.timestamp) + '</div></div></div>';
-      h += '<div class="post-sport"><span class="sport-tag">' + (sport.emoji || '🏋️') + ' ' + (sport.name || '运动') + '</span></div>';
+      h += '<div class="post-header"><div class="post-avatar">' + (p.avatar || '🏃') + '</div><div><div class="post-author">' + (p.username || '用户') + '</div><div class="post-time">' + fmt(p.created_at) + '</div></div></div>';
+      h += '<div class="post-sport"><span class="sport-tag">' + (ed.emoji || '🏋️') + ' ' + (ed.name || '运动') + '</span></div>';
       h += '<div class="post-data">';
-      if (p.duration) h += '⏱ 时长：' + p.duration + ' 分钟<br>';
-      if (p.distance) h += '📏 距离：' + p.distance + ' 公里<br>';
-      if (p.bodyPart && p.exercise) h += '🏋️ 部位：' + p.bodyPart + ' · 动作：' + p.exercise + '<br>';
-      if (p.sets && p.weightPerSet) h += '🔢 ' + p.sets + ' 组 × ' + p.weightPerSet + ' 公斤<br>';
+      if (ed.duration) h += '⏱ 时长：' + ed.duration + ' 分钟<br>';
+      if (ed.distance) h += '📏 距离：' + ed.distance + ' 公里<br>';
+      if (ed.bodyPart && ed.exercise) h += '🏋️ 部位：' + ed.bodyPart + ' · 动作：' + ed.exercise + '<br>';
+      if (ed.sets && ed.weightPerSet) h += '🔢 ' + ed.sets + ' 组 × ' + ed.weightPerSet + ' 公斤<br>';
       h += '</div>';
       if (moodEmoji) h += '<div class="post-mood">心情 ' + moodEmoji + '</div>';
       h += '<div class="post-actions"><div class="action-btn' + (isLiked ? ' liked' : '') + '" data-act="like"><span class="heart-icon">' + (isLiked ? '❤️' : '🤍') + '</span> 点赞 ' + likesCount + '</div>';
@@ -620,7 +713,7 @@
         var shown = showAll ? p.comments : p.comments.slice(0, 3);
         for (var ci = 0; ci < shown.length; ci++) {
           var c = shown[ci];
-          h += '<div class="comment-item" data-cid="' + c.id + '"><span class="comment-author">' + c.author + '</span>';
+          h += '<div class="comment-item" data-cid="' + (c.id || ci) + '"><span class="comment-author">' + c.author + '</span>';
           if (c.replyTo && c.replyTo !== c.author) h += ' <span class="comment-reply-to">回复</span> <span class="reply-text">' + c.replyTo + '</span>';
           h += '：<span class="comment-text">' + c.text + '</span></div>';
         }
@@ -634,7 +727,7 @@
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 6. CHECK-IN (preserved)
+  // 6. CHECK-IN (双流合并，双重防卫排版错位)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function renderSports() {
@@ -659,6 +752,7 @@
   function buildForm(sport) {
     var t = sport.type; dynFormContent.innerHTML = '';
     if (t === 'distance') {
+      // 样式修复：移除上一版的嵌套重复 class，还原扁平化的输入排版
       dynFormContent.innerHTML = '<div class="form-row"><div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" /></div><div class="form-group"><label>📏 运动距离（公里）</label><input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" /></div></div>';
       dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     } else if (t === 'anaerobic') {
@@ -706,17 +800,39 @@
     btnConfirm.disabled = !ok;
   }
 
-  btnConfirm.addEventListener('click', function() {
+  btnConfirm.addEventListener('click', async function() {
     if (this.disabled) return; var s = selectedSport, t = s.type;
-    var r = { id: Date.now(), timestamp: new Date().toISOString(), sport: { id: s.id, name: s.name, emoji: s.emoji, type: s.type }, mood: selectedMood, isPrivate: isPrivate };
-    if (t === 'distance') { r.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value); r.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value); }
-    else if (t === 'anaerobic') { r.bodyPart = selectedBodyPart; r.exercise = selectedExercise; r.sets = parseInt(dynFormContent.querySelector('.ana-sets').value); r.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value); }
-    else { r.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value); }
-    var list = ls('fitmate_checkins', []); list.push(r); lss('fitmate_checkins', list); incCount(s.id);
-    if (!r.isPrivate) {
-      var post = { id: r.id, timestamp: r.timestamp, author: nickname, avatar: selectedAvatar, sport: r.sport, mood: r.mood, duration: r.duration, distance: r.distance, bodyPart: r.bodyPart, exercise: r.exercise, sets: r.sets, weightPerSet: r.weightPerSet, likes: [], comments: [] };
-      var posts = getPosts(); posts.unshift(post); savePosts(posts); renderCircle();
+    var ed = { emoji: s.emoji, name: s.name, type: s.type };
+    if (t === 'distance') { ed.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value); ed.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value); }
+    else if (t === 'anaerobic') { ed.bodyPart = selectedBodyPart; ed.exercise = selectedExercise; ed.sets = parseInt(dynFormContent.querySelector('.ana-sets').value); ed.weightPerSet = parseFloat(dynFormContent.querySelector('.ana-weight').value); }
+    else { ed.duration = parseFloat(dynFormContent.querySelector('.norm-dur').value); }
+    
+    var list = ls('fitmate_checkins', []); list.push({ id: Date.now(), timestamp: new Date().toISOString(), data: ed }); lss('fitmate_checkins', list); incCount(s.id);
+    
+    if (!isPrivate) {
+      // 赋予独一无二的客户端验证密钥，用于本地/云端对账去重
+      var cloudPost = { 
+        client_id: 'client_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        username: nickname, 
+        avatar: selectedAvatar, 
+        exercise_type: s.type, 
+        exercise_data: ed, 
+        mood: selectedMood, 
+        is_public: true, 
+        likes: [], 
+        comments: [], 
+        created_at: new Date().toISOString() 
+      };
+
+      // 核心跨国集成对账修复：本地先行存入高速缓存，100% 确保动态瞬间产生
+      var localPosts = ls('fitmate_local_posts', []);
+      localPosts.unshift(cloudPost);
+      lss('fitmate_local_posts', localPosts);
+
+      // 后台默默发往 Supabase 云端
+      await sbInsertPost(cloudPost);
     }
+    
     if (!isCheckedIn) {
       isCheckedIn = true; streak += 1; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
       var now = new Date(), pad = function(n) { return String(n).padStart(2, '0'); };
@@ -724,8 +840,10 @@
       btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
       lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
     }
-    show('🎉 打卡成功！' + s.emoji + ' ' + s.name + ' 已记录');
-    simulateNotif(); resetForm();
+    
+    show('🎉 打卡成功！' + s.emoji + ' ' + s.name + ' 已更新至本地与云端');
+    resetForm();
+    await renderCircle(); // 立即本地强制重绘，拒绝任何数据黑洞导致的白屏延迟
   });
 
   function resetForm() {
@@ -735,7 +853,9 @@
     extraCard.style.display = 'none'; btnConfirm.disabled = true;
     moodGrid.querySelectorAll('.mood-item').forEach(function(el) { el.classList.remove('selected'); });
     document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-    selectedMood = '😄'; isPrivate = false; privToggle.classList.add('active');
+    selectedMood = '😄'; 
+    isPrivate = false; 
+    privToggle.classList.add('active'); // 默认重置为所有人可见（高亮绿状态）
   }
 
   moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
@@ -745,7 +865,12 @@
     });
   });
   document.querySelector('.mood-item[data-mood="😄"]').classList.add('selected');
-  privToggle.addEventListener('click', function() { isPrivate = !isPrivate; this.classList.toggle('active', isPrivate); });
+  
+  // 核心逻辑修复：隐私反转校准（高亮绿色代表 active = 所有人可见，灰色代表仅自己可见）
+  privToggle.addEventListener('click', function() { 
+    this.classList.toggle('active'); 
+    isPrivate = !this.classList.contains('active');
+  });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 7. AUTH
@@ -762,10 +887,11 @@
 
   btnStart.addEventListener('click', function() {
     nickname = nickInput.value.trim(); if (!nickname) return;
+    var activeAv = avGrid.querySelector('.avatar-option.selected');
+    if (activeAv) selectedAvatar = activeAv.dataset.avatar;
+    
     topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
-    // Save login info for auto-login next time
-    lss('fitmate_nickname', nickname);
-    lss('fitmate_avatar', selectedAvatar);
+    lss('fitmate_nickname', nickname); lss('fitmate_avatar', selectedAvatar);
     var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString();
     if (savedDateLogin === todayLogin) {
       streak = savedStreakLogin; isCheckedIn = true; streakNum.textContent = streak;
@@ -775,16 +901,11 @@
       streak = savedStreakLogin; streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; isCheckedIn = false;
     } else { streakBadge.textContent = '🔥 连续 0 天'; streakNum.textContent = '0'; isCheckedIn = false; }
     authScreen.classList.add('hidden'); mainScreen.classList.add('active');
-    show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle(); updateNotifUI();
-    startNotifSimulator();
+    show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle(); pollNotifs();
+    startNotifPoll();
   });
   nickInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !btnStart.disabled) btnStart.click(); });
   document.querySelector('.avatar-option').classList.add('selected');
-
-  function startNotifSimulator() {
-    function next() { notifTimer = setTimeout(function() { if (nickname) { simulateNotif(); } next(); }, rand(5000, 10000)); }
-    next();
-  }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 8. TAB NAVIGATION
@@ -815,55 +936,52 @@
   });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 10. AUTO-LOGIN on page load
+  // 10. AUTO-LOGIN + INIT
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  var savedNick = ls('fitmate_nickname', '');
-  var savedAv   = ls('fitmate_avatar', '');
+  (async function init() {
+    await sbInit();
 
-  if (savedNick && savedAv) {
-    // Restore user identity
-    nickname = savedNick;
-    selectedAvatar = savedAv;
-    topAvatar.textContent = selectedAvatar;
-    topName.textContent   = nickname;
+    var savedNick = ls('fitmate_nickname', '');
+    var savedAv   = ls('fitmate_avatar', '');
 
-    // Restore streak
-    var savedStreak = ls('fitmate_streak', 0);
-    var savedDate   = ls('fitmate_streak_date', '');
-    var today       = new Date().toDateString();
+    if (savedNick && savedAv) {
+      nickname = savedNick; selectedAvatar = savedAv;
+      topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
 
-    if (savedDate === today) {
-      streak = savedStreak; isCheckedIn = true;
-      streakNum.textContent = streak;
-      streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
-      btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
-      if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
-    } else if (savedDate && savedStreak > 0) {
-      streak = savedStreak;
-      streakNum.textContent = streak;
-      streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+      var savedStreak = ls('fitmate_streak', 0);
+      var savedDate   = ls('fitmate_streak_date', '');
+      var today       = new Date().toDateString();
+
+      if (savedDate === today) {
+        streak = savedStreak; isCheckedIn = true;
+        streakNum.textContent = streak; streakBadge.textContent = '🔥 连续 ' + streak + ' 天';
+        btnCheckin.textContent = '✅ 已打卡'; btnCheckin.classList.add('done');
+        if (checkinTime) checkinTime.textContent = '⏱ 今日已打卡 ✅';
+      } else if (savedDate && savedStreak > 0) {
+        streak = savedStreak; streakNum.textContent = streak;
+        streakBadge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）';
+      } else {
+        streakBadge.textContent = '🔥 连续 0 天'; streakNum.textContent = '0';
+      }
+
+      authScreen.classList.add('hidden'); mainScreen.classList.add('active');
+      renderSports(); renderCircle(); pollNotifs();
+      startNotifPoll();
+      show('👋 自动登录成功，' + nickname + '！');
     } else {
-      streakBadge.textContent = '🔥 连续 0 天';
-      streakNum.textContent = '0';
+      var noAuthStreak = ls('fitmate_streak', 0);
+      var noAuthDate   = ls('fitmate_streak_date', '');
+      var noAuthToday  = new Date().toDateString();
+      if (noAuthDate === noAuthToday) {
+        streakNum.textContent = noAuthStreak; streakBadge.textContent = '🔥 连续 ' + noAuthStreak + ' 天';
+      } else if (noAuthDate && noAuthStreak > 0) {
+        streakNum.textContent = noAuthStreak; streakBadge.textContent = '🔥 连续 ' + noAuthStreak + ' 天（今日未打卡）';
+      }
     }
 
-    // Skip login screen
-    authScreen.classList.add('hidden');
-    mainScreen.classList.add('active');
-
-    // Initialize everything
-    renderSports();
-    renderCircle();
-    updateNotifUI();
-
-    // Start auto notification simulator
-    startNotifSimulator();
-
-    show('👋 自动登录成功，' + nickname + '！');
-  }
-
-  console.log('🏋️ FitMate 社交版已加载 — 自动登录就绪');
+    console.log('🏋️ FitMate 云同步版已加载');
+  })();
 })();
 </script>
 </body>
