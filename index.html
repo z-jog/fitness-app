@@ -351,24 +351,20 @@
   'use strict';
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // SUPABASE CONFIG
+  // ⚡ INTEGRATED CONFIGURATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  var SUPABASE_URL = 'https://kuvrzqdpcauhjhcvrpp.supabase.co';
-  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1dnJ6cWRwY2F1aGpoY3ZycHAiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc0ODE0NjgxNSwiZXhwIjoyMDYzNzIyODE1fQ.P4fQCOO7-WLCL8pz_XINzvs2w2BUBvq06U2hKFnpeEw';
+  var SUPABASE_URL = 'https://kuvrzqdpccahujhcvrpp.supabase.co';
+  var SUPABASE_ANON = 'sb_publishable_Gn_6laUiGUYHANt916z8sw_og6ZIMTr';
+  
   var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   var sbReady = false;
 
   async function sbInit() {
     try {
       var { data, error } = await supabase.from('fitmate_posts').select('id').limit(1);
-      if (error && error.code === '42P01') {
-        console.log('⚠️ 请在Supabase SQL Editor执行建表SQL');
-      } else {
-        sbReady = true;
-        console.log('✅ Supabase连接正常');
-      }
+      sbReady = true;
+      console.log('✅ Supabase网关对接就绪');
     } catch(e) { 
-      console.log('Supabase init error:', e.message); 
       sbReady = true; 
     }
   }
@@ -376,24 +372,27 @@
   async function sbFetchPosts() {
     if (!sbReady) return [];
     try { 
-      var { data, error } = await supabase.from('fitmate_posts').select('*').eq('is_public', true).order('created_at', { ascending: false }).limit(50); 
-      if (error) console.error('Fetch posts error:', error);
+      var { data, error } = await supabase.from('fitmate_posts').select('*').order('created_at', { ascending: false }).limit(50); 
+      if (error) {
+        alert("⚠️ 数据库读取被拦截！详情请看: " + error.message + " (请去SQL Editor修复RLS)");
+        console.error(error);
+      }
       return data || []; 
     } catch(e) { return []; }
   }
 
-  // 核心升级：利用 select().single() 实时向云端索要合规的自增 ID 并回填本地组件
   async function sbInsertPost(p) {
     if (!sbReady) return null;
     try { 
-      var { data, error } = await supabase.from('fitmate_posts').insert([p]).select().single(); 
+      var { data, error } = await supabase.from('fitmate_posts').insert([p]).select(); 
       if (error) {
-        console.error('❌ 云端同步错误:', error.message);
+        alert("❌ 云端拒收单据！\n\n原因: " + error.message + "\n\n提示：请检查SQL Editor是否执行了建表脚本！");
+        console.error('Insert Error Detail:', error);
         return null;
       }
-      return data;
+      return data && data.length ? data[0] : null;
     } catch(e) { 
-      console.error('Insert exception:', e); 
+      console.error('Insert catch block:', e); 
       return null;
     }
   }
@@ -484,10 +483,10 @@
   const notifOverlay = $('notifOverlay'), notifPanel = $('notifPanel'), notifList = $('notifList'), notifReadAll = $('notifReadAll');
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 3. UTILITIES (缓存防崩对账模块)
+  // 3. UTILITIES
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2400); }
+  function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000); }
   
   function ls(key, def) { 
     try { 
@@ -547,7 +546,7 @@
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 5. CLOUD CIRCLE FEED (混合对账：融合云端与本地发布快照)
+  // 5. CLOUD CIRCLE FEED
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   async function renderCircle() {
@@ -555,12 +554,9 @@
     var activePlaceholder = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.placeholder : null;
     var activeValue = document.activeElement && document.activeElement.classList.contains('comment-input') ? document.activeElement.value : '';
 
-    // A. 拉取云端动态
     var cloudPosts = await sbFetchPosts();
-    // B. 读取本地备份
     var localPosts = ls('fitmate_local_posts', []);
     
-    // C. 混合排重去重
     var mergedPosts = [...cloudPosts];
     localPosts.forEach(function(lp) {
       var isAlreadyInCloud = mergedPosts.some(function(cp) {
@@ -735,7 +731,7 @@
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 6. CHECK-IN (双流对账 & 样式错位消除)
+  // 6. CHECK-IN
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   function renderSports() {
@@ -760,7 +756,6 @@
   function buildForm(sport) {
     var t = sport.type; dynFormContent.innerHTML = '';
     if (t === 'distance') {
-      // 深度排雷：全量剔除重复多余包裹的嵌套表单类名，复原扁平结构
       dynFormContent.innerHTML = '<div class="form-row"><div class="form-group"><label>⏱ 运动时长（分钟）</label><input class="form-input dist-dur" type="number" min="1" max="999" placeholder="例如 30" /></div><div class="form-group"><label>📏 运动距离（公里）</label><input class="form-input dist-dist" type="number" min="0.1" step="0.1" max="999" placeholder="例如 5.0" /></div></div>';
       dynFormContent.querySelectorAll('.form-input').forEach(function(el) { el.addEventListener('input', validate); });
     } else if (t === 'anaerobic') {
@@ -817,8 +812,8 @@
     
     var list = ls('fitmate_checkins', []); list.push({ id: Date.now(), timestamp: new Date().toISOString(), data: ed }); lss('fitmate_checkins', list); incCount(s.id);
     
+    var syncSuccess = false;
     if (!isPrivate) {
-      // 深度对账升级：移除任何 id 主键。只传确定存在的列，完美防范42703未知列崩溃
       var cloudPost = { 
         username: nickname, 
         avatar: selectedAvatar, 
@@ -831,20 +826,18 @@
         created_at: new Date().toISOString() 
       };
 
-      // 1. 本地生成带 temp_ 前缀的临时单据，拒绝任何白屏无反应
       var tempId = 'temp_' + Date.now();
       var localPostMock = Object.assign({}, cloudPost, { id: tempId });
       var localPosts = ls('fitmate_local_posts', []);
       localPosts.unshift(localPostMock);
       lss('fitmate_local_posts', localPosts);
-      await renderCircle(); // 本地闪电回流展示
+      await renderCircle(); 
 
-      // 2. 静默交由云端入库
       var liveSavedData = await sbInsertPost(cloudPost);
       if (liveSavedData && liveSavedData.id) {
-        // 3. 云端接单成功！将自增/UUID真实ID反向回填覆盖本地假单，彻底解决点赞报错Bug
+        syncSuccess = true;
         var currentLocals = ls('fitmate_local_posts', []);
-        var idx = currentLocals.findIndex(function(lp) { return lp.id === tempId; });
+        var idx = currentLocals.findIndex(function(lp) { return String(lp.id) === String(tempId); });
         if (idx !== -1) {
           currentLocals[idx] = liveSavedData;
           lss('fitmate_local_posts', currentLocals);
@@ -860,7 +853,9 @@
       lss('fitmate_streak', streak); lss('fitmate_streak_date', now.toDateString());
     }
     
-    show('🎉 打卡成功！已双流同步更新');
+    if (isPrivate || syncSuccess) {
+      show('🎉 打卡成功！动态已双流向对账同步');
+    }
     resetForm();
     await renderCircle(); 
   });
