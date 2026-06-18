@@ -9,10 +9,10 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #111827; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-    /* ── 核心布局：严格锁死外壳一屏高度，底部icon雷打不动 ── */
+    /* ── 核心视口锁死布局：让内容独立滚动，底栏稳如泰山 ── */
     #app { width: 100%; max-width: 420px; height: 100vh; height: 100dvh; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,0,0,0.6); }
     #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 32px 24px; }
-    #auth-screen.hidden { display: none; }
+    #auth-screen.hidden { display: none !important; }
     .auth-card { background: #374151; border-radius: 24px; padding: 32px 24px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
     .logo-icon { width: 56px; height: 56px; background: #a3e635; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; }
     .auth-title { font-size: 24px; font-weight: 700; color: #f9fafb; text-align: center; }
@@ -23,15 +23,14 @@
     .avatar-grid { display: flex; gap: 16px; justify-content: center; }
     .avatar-option { width: 64px; height: 64px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid transparent; }
     .avatar-option.selected { border-color: #a3e635; background: #3f6212; }
-    .btn-start { width: 100%; margin-top: 32px; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border-radius: 14px; }
-    .btn-start:disabled { opacity: 0.4; }
+    .btn-start { width: 100%; margin-top: 32px; padding: 16px; background: #a3e635; color: #111827; font-size: 17px; font-weight: 700; border-radius: 14px; cursor: pointer; }
+    .btn-start:disabled { opacity: 0.4; cursor: not-allowed; }
     #main-screen { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; }
-    #main-screen.active { display: flex; }
+    #main-screen.active { display: flex !important; }
     .top-bar { padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between; background: #1f2937; border-bottom: 1px solid #374151; flex-shrink: 0; }
     .top-bar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #4b5563; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     .top-bar-name { color: #f9fafb; font-weight: 600; font-size: 15px; }
     .top-bar-badge { background: #a3e635; color: #111827; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
-    /* ── 中间独立内部纵向滚动 ── */
     .content-area { flex: 1; overflow-y: auto; padding: 20px; }
     .tab-page { display: none; }
     .tab-page.active { display: block; }
@@ -359,7 +358,7 @@
     return Math.round((d2 - d1) / 86400000);
   }
 
-  // 🛠️ 核心机制重接：完整、健壮、防熔断的表单重置器
+  // 🛠️ 核心防御：健全的表单重置器，防止任何空函数调用抛错
   function resetForm() {
     selectedSport = null; selectedBodyPart = null; selectedMood = '😄'; isPrivate = false;
     if (dynFormCard) dynFormCard.style.display = 'none';
@@ -373,7 +372,7 @@
     validate();
   }
 
-  // 🛠️ 核心机制重接：重新编织心情与隐私安全听众
+  // 🛠️ 焊接纽带：让心情磁贴可以自由点击高亮
   if (moodGrid) {
     moodGrid.querySelectorAll('.mood-item').forEach(function(el) {
       el.addEventListener('click', function() {
@@ -383,6 +382,8 @@
       });
     });
   }
+  
+  // 🛠️ 焊接纽带：隐私所有人/仅自己开关点击响应
   if (privToggle) {
     privToggle.addEventListener('click', function() {
       this.classList.toggle('active');
@@ -476,26 +477,50 @@
     show('🎉 打卡成功！动态已双流向对账同步'); incCount(s.id); renderSports(); resetForm(); await renderCircle();
   });
 
-  avGrid.querySelectorAll('.avatar-option').forEach(function(el) { el.addEventListener('click', function() { avGrid.querySelectorAll('.avatar-option').forEach(function(a) { a.classList.remove('selected'); }); this.classList.add('selected'); selectedAvatar = this.dataset.avatar; btnStart.disabled = nickInput.value.trim().length === 0; }); });
+  // 🛠️ 神经中枢激活：解决由于头像/昵称切换导致按钮卡死的核心控制器
+  avGrid.querySelectorAll('.avatar-option').forEach(function(el) { 
+    el.addEventListener('click', function() { 
+      avGrid.querySelectorAll('.avatar-option').forEach(function(a) { a.classList.remove('selected'); }); 
+      this.classList.add('selected'); 
+      selectedAvatar = this.dataset.avatar; 
+      btnStart.disabled = nickInput.value.trim().length === 0; 
+    }); 
+  });
+  
   nickInput.addEventListener('input', function() { btnStart.disabled = this.value.trim().length === 0; });
 
+  // 🛠️ 神经中枢激活：核心状态切换通道函数（确保登录完必然能看见全部业务组件）
+  function switchToMain() {
+    authScreen.classList.add('hidden');
+    mainScreen.classList.add('active');
+    renderSports();
+    renderCircle();
+  }
+
   btnStart.addEventListener('click', function() {
-    nickname = nickInput.value.trim(); if (!nickname) return; var activeAv = avGrid.querySelector('.avatar-option.selected'); if (activeAv) selectedAvatar = activeAv.dataset.avatar;
-    topAvatar.textContent = selectedAvatar; topName.textContent = nickname; lss('fitmate_nickname', nickname); lss('fitmate_avatar', selectedAvatar);
+    nickname = nickInput.value.trim(); if (!nickname) return; 
+    var activeAv = avGrid.querySelector('.avatar-option.selected'); if (activeAv) selectedAvatar = activeAv.dataset.avatar;
+    topAvatar.textContent = selectedAvatar; topName.textContent = nickname; 
+    lss('fitmate_nickname', nickname); lss('fitmate_avatar', selectedAvatar);
+    
     var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString(); var badge = document.getElementById('mainStreakBadge');
     var daysDiff = getDaysDiff(savedDateLogin, todayLogin);
     if (daysDiff === 0) { streak = savedStreakLogin; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; } 
     else if (daysDiff === 1) { streak = savedStreakLogin; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; } 
     else { streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天'; }
-    authScreen.classList.add('hidden'); mainScreen.classList.add('active'); show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle();
+    
+    show('👋 欢迎回来，' + nickname + '！');
+    switchToMain();
   });
 
   navItems.forEach(function(item) { item.addEventListener('click', function() { var tab = this.dataset.tab; navItems.forEach(function(n) { n.classList.remove('active'); }); this.classList.add('active'); Object.keys(tabPages).forEach(function(k) { tabPages[k].classList.toggle('active', k === tab); }); if (tab === 'circle') renderCircle(); if (tab === 'rank') renderRankings(); if (tab === 'mine') renderPersonalMineCenter(); }); });
 
+  // 🛠️ 免疫机制保护：系统自加载环境沙箱
   (async function init() {
     await sbInit(); initRankSelectors(); applyLanguage('zh'); 
     var savedNick = null; try { savedNick = ls('fitmate_nickname', ''); } catch(e) { localStorage.clear(); }
     var savedAv = ls('fitmate_avatar', '');
+    
     if (savedNick && savedAv) {
       nickname = savedNick; selectedAvatar = savedAv; topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
       var savedStreak = ls('fitmate_streak', 0), savedDate = ls('fitmate_streak_date', ''), today = new Date().toDateString(); var badge = document.getElementById('mainStreakBadge');
@@ -503,7 +528,7 @@
       if (daysDiff === 0) { streak = savedStreak; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; } 
       else if (daysDiff === 1) { streak = savedStreak; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; } 
       else { streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天'; }
-      authScreen.classList.add('hidden'); mainScreen.classList.add('active'); renderSports(); renderCircle();
+      switchToMain();
     } else {
       authScreen.classList.remove('hidden'); mainScreen.classList.remove('active');
     }
