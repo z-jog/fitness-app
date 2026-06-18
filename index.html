@@ -353,13 +353,23 @@
   function incCount(id) { var c = getCounts(); c[id] = (c[id] || 0) + 1; lss('fitmate_sport_counts', c); }
   function fmt(iso) { var d = new Date(iso); var p = function(n) { return String(n).padStart(2, '0'); }; return p(d.getMonth()+1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
 
-  // 🔥 核心重构计算器：通过严格抹平一天中的小时差，只比对“自然日历天数”，从而精准算出是否连续跨日打卡
   function getDaysDiff(dateStr1, dateStr2) {
     if (!dateStr1 || !dateStr2) return -1;
     var d1 = new Date(dateStr1); d1.setHours(0,0,0,0);
     var d2 = new Date(dateStr2); d2.setHours(0,0,0,0);
     return Math.round((d2 - d1) / 86400000);
   }
+
+  // 🛠️ 核心防御回归：声明重置表单状态函数，彻底破除熔断死锁
+  function resetForm() {
+    selectedSport = null; selectedBodyPart = null;
+    if (dynFormCard) dynFormCard.style.display = 'none';
+    if (extraCard) extraCard.style.display = 'none';
+    sportGrid.querySelectorAll('.sport-item').forEach(function(el) { el.classList.remove('selected'); });
+    validate();
+  }
+
+  function show(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000); }
 
   async function renderCircle() {
     circleFeed.innerHTML = '<div style="text-align:center;color:#6b7280;padding:30px;">🌐 加载中...</div>'; var cloudPosts = await sbFetchPosts(); var localPosts = ls('fitmate_local_posts', []); var mergedPosts = [...cloudPosts];
@@ -427,10 +437,7 @@
   }
 
   btnConfirm.addEventListener('click', async function() {
-    if (this.disabled) return; 
-    var todayStr = new Date().toDateString(); 
-    var lastCheckinDate = ls('fitmate_streak_date', ''); 
-    if (lastCheckinDate === todayStr) { show('⏰ 今天已经打过卡啦，明天继续！'); return; }
+    if (this.disabled) return; var todayStr = new Date().toDateString(); var lastCheckinDate = ls('fitmate_streak_date', ''); if (lastCheckinDate === todayStr) { show('⏰ 今天已经打过卡啦，明天继续！'); return; }
     var s = selectedSport, t = s.type; var ed = { emoji: s.emoji, name: s.name, type: s.type };
     if (t === 'distance') { ed.duration = parseFloat(dynFormContent.querySelector('.dist-dur').value); ed.distance = parseFloat(dynFormContent.querySelector('.dist-dist').value); }
     else if (t === 'anaerobic') { ed.bodyPart = selectedBodyPart; ed.duration = parseFloat(dynFormContent.querySelector('.ana-dur').value); }
@@ -440,21 +447,12 @@
       var tempId = 'temp_' + Date.now(); var localPosts = ls('fitmate_local_posts', []); localPosts.unshift(Object.assign({}, cloudPost, { id: tempId })); lss('fitmate_local_posts', localPosts); await renderCircle();
       var liveSavedData = await sbInsertPost(cloudPost); if (liveSavedData && liveSavedData.id) { var currentLocals = ls('fitmate_local_posts', []); var idx = currentLocals.findIndex(function(lp) { return String(lp.id) === String(tempId); }); if (idx !== -1) { currentLocals[idx] = liveSavedData; lss('fitmate_local_posts', currentLocals); } }
     }
-    
     if (!isCheckedIn) { 
-      isCheckedIn = true; 
-      var savedStreak = ls('fitmate_streak', 0); 
-      // 🔥 核心重构：不再使用死板字符串比较，采用高精度自然日天数差计算
-      var daysDiff = getDaysDiff(lastCheckinDate, todayStr);
-      if (daysDiff === 1) { streak = savedStreak + 1; } // 完美间隔一天，连续累计
-      else if (daysDiff === 0) { streak = savedStreak; } // 同一天
-      else { streak = 1; } // 断档或未打卡，重置为1
-      
-      var badge = document.getElementById('mainStreakBadge'); if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; 
-      lss('fitmate_streak', streak); 
-      lss('fitmate_streak_date', todayStr); 
+      isCheckedIn = true; var savedStreak = ls('fitmate_streak', 0); var daysDiff = getDaysDiff(lastCheckinDate, todayStr);
+      if (daysDiff === 1) { streak = savedStreak + 1; } else if (daysDiff === 0) { streak = savedStreak; } else { streak = 1; }
+      var badge = document.getElementById('mainStreakBadge'); if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; lss('fitmate_streak', streak); lss('fitmate_streak_date', todayStr);
     }
-    show('🎉 打卡成功！动态已双流向对账同步'); resetForm(); await renderCircle();
+    show('🎉 打卡成功！动态已双流向对账同步'); incCount(s.id); renderSports(); resetForm(); await renderCircle();
   });
 
   avGrid.querySelectorAll('.avatar-option').forEach(function(el) { el.addEventListener('click', function() { avGrid.querySelectorAll('.avatar-option').forEach(function(a) { a.classList.remove('selected'); }); this.classList.add('selected'); selectedAvatar = this.dataset.avatar; btnStart.disabled = nickInput.value.trim().length === 0; }); });
@@ -463,16 +461,11 @@
   btnStart.addEventListener('click', function() {
     nickname = nickInput.value.trim(); if (!nickname) return; var activeAv = avGrid.querySelector('.avatar-option.selected'); if (activeAv) selectedAvatar = activeAv.dataset.avatar;
     topAvatar.textContent = selectedAvatar; topName.textContent = nickname; lss('fitmate_nickname', nickname); lss('fitmate_avatar', selectedAvatar);
-    
-    var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString(); 
-    var badge = document.getElementById('mainStreakBadge');
-    
-    // 🔥 核心重构：登录时也调用高精度日历算法
+    var savedStreakLogin = ls('fitmate_streak', 0), savedDateLogin = ls('fitmate_streak_date', ''), todayLogin = new Date().toDateString(); var badge = document.getElementById('mainStreakBadge');
     var daysDiff = getDaysDiff(savedDateLogin, todayLogin);
     if (daysDiff === 0) { streak = savedStreakLogin; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; } 
     else if (daysDiff === 1) { streak = savedStreakLogin; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; } 
     else { streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天'; }
-    
     authScreen.classList.add('hidden'); mainScreen.classList.add('active'); show('👋 欢迎回来，' + nickname + '！'); renderSports(); renderCircle();
   });
 
@@ -482,15 +475,11 @@
     await sbInit(); initRankSelectors(); applyLanguage('zh'); var savedNick = ls('fitmate_nickname', ''), savedAv = ls('fitmate_avatar', '');
     if (savedNick && savedAv) {
       nickname = savedNick; selectedAvatar = savedAv; topAvatar.textContent = selectedAvatar; topName.textContent = nickname;
-      var savedStreak = ls('fitmate_streak', 0), savedDate = ls('fitmate_streak_date', ''), today = new Date().toDateString(); 
-      var badge = document.getElementById('mainStreakBadge');
-      
-      // 🔥 核心重构：初始化时也调用高精度日历算法
+      var savedStreak = ls('fitmate_streak', 0), savedDate = ls('fitmate_streak_date', ''), today = new Date().toDateString(); var badge = document.getElementById('mainStreakBadge');
       var daysDiff = getDaysDiff(savedDate, today);
       if (daysDiff === 0) { streak = savedStreak; isCheckedIn = true; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天'; } 
       else if (daysDiff === 1) { streak = savedStreak; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 ' + streak + ' 天（今日未打卡）'; } 
       else { streak = 0; isCheckedIn = false; if(badge) badge.textContent = '🔥 连续 0 天'; }
-      
       authScreen.classList.add('hidden'); mainScreen.classList.add('active'); renderSports(); renderCircle();
     }
   })();
