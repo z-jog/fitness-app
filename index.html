@@ -229,17 +229,14 @@
     $('newNickname').value = ''; show('🎉 昵称及历史动态已全部更新！'); renderCircle();
   }
 
-  // 🛠️ 个人中心审计：终身总数(All-time) vs 动态当月日历(Current Month)
   async function renderPersonalCenter() {
     $('mineName').textContent = nickname; $('mineAvatar').textContent = selectedAvatar;
     const { data } = await supabase.from('fitmate_posts').select('*').eq('username', nickname);
     
-    // 终身数据直接梭哈全量长度
     let totalDur = 0, totalCount = data ? data.length : 0;
     if (data) data.forEach(p => { if (p.exercise_data && p.exercise_data.duration) totalDur += parseFloat(p.exercise_data.duration); });
     $('statDuration').textContent = totalDur; $('statCounts').textContent = totalCount;
 
-    // 动态算出当前自然月份的最大天数，防止日历溢出断档
     let now = new Date(); let currYear = now.getFullYear(); let currMonth = now.getMonth();
     let daysInMonth = new Date(currYear, currMonth + 1, 0).getDate();
     let monthStr = `${currYear}.${String(currMonth + 1).padStart(2, '0')}`;
@@ -264,7 +261,6 @@
     }
   }
 
-  // 🛠️ 排行榜核心：硬核引入当月过滤，非当月数据直接熔断截流
   async function renderRankings() {
     $('rankList').innerHTML = '<div class="text-center text-gray-500 py-6 text-xs">🌐 正在对账当月数据...</div>';
     const { data } = await supabase.from('fitmate_posts').select('*');
@@ -274,7 +270,6 @@
 
     data.forEach(p => {
       let pDate = new Date(p.created_at);
-      // 核心门禁：严格比对年份和月份
       if (pDate.getFullYear() === currYear && pDate.getMonth() === currMonth) {
         let u = p.username || '匿名';
         if(!agg[u]) agg[u] = { name: u, avatar: p.avatar || '🏃', duration: 0, count: 0, runDistance: 0 };
@@ -320,7 +315,7 @@
   function buildForm(s) {
     const cont = $('dynamicFormContent'); cont.innerHTML = '';
     if (s.type === 'distance') {
-      cont.innerHTML = `<div class="flex gap-2"><input type="number" class="form-input dur text-xs" placeholder="⏱ 时长 (分钟)" /><input type="number" class="form-input dist text-xs" placeholder="📏 距离 (公里)" /></div>`;
+      cont.innerHTML = `<div class="flex gap-2"><input type="number" class="form-input dur text-xs" placeholder="⏱ 时长 (微时间/分钟)" /><input type="number" class="form-input dist text-xs" placeholder="📏 距离 (公里)" /></div>`;
     } else if (s.type === 'anaerobic') {
       let h = '<div class="body-part-tabs" id="bodyTabs">'; 
       BODY_PARTS.forEach(bp => h += `<div class="body-part-tab" data-part="${bp.id}">${bp.label}</div>`);
@@ -335,11 +330,12 @@
       cont.innerHTML = `<input type="number" class="form-input dur text-xs" placeholder="⏱ 时长 (分钟)" />`;
     }
     cont.querySelectorAll('input').forEach(i => i.oninput = validate);
+    validate();
   }
 
   function validate() {
-    let ok = true; let dInput = document.querySelector('.dur'); if(!dInput || !dInput.value.trim()) ok = false;
-    if(selectedSport && selectedSport.type === 'distance') { let distInput = document.querySelector('.dist'); if(!distInput || !distInput.value.trim()) ok = false; }
+    let ok = true; let dInput = document.querySelector('.dur'); if(!dInput || !dInput.value.trim() || parseFloat(dInput.value) <= 0) ok = false;
+    if(selectedSport && selectedSport.type === 'distance') { let distInput = document.querySelector('.dist'); if(!distInput || !distInput.value.trim() || parseFloat(distInput.value) <= 0) ok = false; }
     if(selectedSport && selectedSport.type === 'anaerobic' && !selectedBodyPart) ok = false;
     $('btnConfirmCheckin').disabled = !ok;
   }
@@ -353,6 +349,7 @@
     $('privacyToggle').classList.add('active'); initDatePicker(); validate();
   }
 
+  // 🛠️ 深度连合：完美加载点赞评论流与底层操作面板
   async function renderCircle() {
     $('circleFeed').innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">🌐 正在对账云端动态...</div>';
     const { data } = await supabase.from('fitmate_posts').select('*').order('created_at', { ascending: false }).limit(50);
@@ -360,11 +357,73 @@
     let h = '';
     data.forEach(p => {
       let ed = p.exercise_data || {};
-      h += `<div class="post-card"><div class="post-header"><div class="post-avatar">${p.avatar||'🏃'}</div><div><div class="text-white text-xs font-bold">${p.username}</div><div class="text-[10px] text-gray-500">${p.created_at.slice(5,16).replace('T',' ')}</div></div></div><div class="text-lime-400 text-xs font-bold mb-1">${ed.emoji || '🏋️'} ${ed.name || '运动'}</div><div class="text-gray-400 text-xs">⏱ 时长：${ed.duration || 0} 分钟 ${ed.distance ? `| 📏 距离：${ed.distance} 公里` : ''} ${ed.bodyPart ? `| 🏋️ 部位：${ed.bodyPart}` : ''} | 心情 ${p.mood || '😄'}</div></div>`;
+      let likesArr = p.likes || [];
+      let commsArr = p.comments || [];
+      let isLiked = likesArr.indexOf(nickname) !== -1;
+      
+      h += `<div class="post-card" data-pid="${p.id}">
+        <div class="post-header">
+          <div class="post-avatar">${p.avatar||'🏃'}</div>
+          <div>
+            <div class="text-white text-xs font-bold">${p.username}</div>
+            <div class="text-[10px] text-gray-500">${p.created_at.slice(5,16).replace('T',' ')}</div>
+          </div>
+        </div>
+        <div class="text-lime-400 text-xs font-bold mb-1">${ed.emoji || '🏋️'} ${ed.name || '运动'}</div>
+        <div class="text-gray-300 text-xs">⏱ 时长：${ed.duration || 0} 分钟 ${ed.distance ? `| 📏 距离：${ed.distance} 公里` : ''} ${ed.bodyPart ? `| 🏋️ 部位：${ed.bodyPart}` : ''} | 心情 ${p.mood || '😄'}</div>
+        
+        <div class="flex gap-6 mt-3 pt-2 border-t border-gray-600/30 text-xs text-gray-400">
+          <div class="cursor-pointer flex items-center gap-1 act-like ${isLiked ? 'text-red-400 font-bold' : ''}"><span>${isLiked ? '❤️' : '🤍'}</span> 点赞 ${likesArr.length}</div>
+          <div class="flex items-center gap-1"><span>💬</span> 评论 ${commsArr.length}</div>
+        </div>`;
+
+      if(commsArr.length > 0) {
+        h += `<div class="mt-2 bg-gray-800/40 p-2 rounded-lg flex flex-col gap-1 text-[11px]">`;
+        commsArr.forEach(c => {
+          h += `<div class="text-gray-300"><span class="text-lime-400 font-bold">${c.author}</span>: ${c.text}</div>`;
+        });
+        h += `</div>`;
+      }
+
+      h += `<div class="mt-2 flex gap-2">
+        <input class="flex-1 bg-gray-600 rounded-lg p-1.5 text-xs text-white outline-none comm-input" type="text" placeholder="说点什么..." />
+        <button class="bg-lime-400 text-gray-900 px-3 py-1 rounded-lg text-xs font-bold btn-send-comm">发送</button>
+      </div></div>`;
     });
     $('circleFeed').innerHTML = h;
+    bindCircleEvents();
   }
 
+  // 🛠️ 焊接重连：绑定动态点赞和多级评论上传
+  function bindCircleEvents() {
+    document.querySelectorAll('.post-card').forEach(card => {
+      let pid = card.dataset.pid;
+      card.querySelector('.act-like').onclick = async () => {
+        const { data } = await supabase.from('fitmate_posts').select('likes').eq('id', pid).single();
+        if(!data) return;
+        let lk = data.likes || [];
+        let idx = lk.indexOf(nickname);
+        if(idx === -1) lk.push(nickname); else lk.splice(idx, 1);
+        await supabase.from('fitmate_posts').update({ likes: lk }).eq('id', pid);
+        renderCircle();
+      };
+
+      card.querySelector('.btn-send-comm').onclick = async () => {
+        let input = card.querySelector('.comm-input');
+        let val = input.value.trim();
+        if(!val) return;
+        const { data } = await supabase.from('fitmate_posts').select('comments').eq('id', pid).single();
+        if(!data) return;
+        let cm = data.comments || [];
+        cm.push({ id: Date.now(), author: nickname, text: val });
+        await supabase.from('fitmate_posts').update({ comments: cm }).eq('id', pid);
+        input.value = '';
+        renderCircle();
+      };
+    });
+  }
+
+  // 🛠️ 安全解冻日期锁：杜绝全网 Invalid Date 崩溃
   function initDatePicker() {
     const today = new Date(); const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -383,16 +442,21 @@
   $('btnUpdateName').onclick = updateNickname;
 
   $('btnConfirmCheckin').onclick = async function() {
-    let dur = document.querySelector('.dur').value;
-    let dist = document.querySelector('.dist') ? document.querySelector('.dist').value : 0;
+    if(this.disabled) return;
+    let dInput = document.querySelector('.dur'); let dur = dInput ? dInput.value : 0;
+    let distInput = document.querySelector('.dist'); let dist = distInput ? distInput.value : 0;
     let ed = { name: selectedSport.name, emoji: selectedSport.emoji, duration: dur, type: selectedSport.type };
     if(selectedSport.type === 'distance') ed.distance = dist;
     if(selectedSport.type === 'anaerobic') ed.bodyPart = selectedBodyPart;
     
-    let userSelectedDate = $('checkinDate').value;
-    let finalTimestamp = new Date(userSelectedDate + 'T' + new Date().toTimeString().split(' ')[0]).toISOString();
+    // 🛠️ 采用高内聚的安全切片算法，绝不引发时间轴死锁崩溃
+    let userSelectedDate = $('checkinDate').value; // "YYYY-MM-DD"
+    let parts = userSelectedDate.split('-');
+    let t = new Date();
+    let finalDate = new Date(parts[0], parts[1] - 1, parts[2], t.getHours(), t.getMinutes(), t.getSeconds());
+    let finalTimestamp = finalDate.toISOString();
 
-    const post = { username: nickname, avatar: selectedAvatar, exercise_type: selectedSport.type, exercise_data: ed, mood: selectedMood, is_public: !isPrivate, created_at: finalTimestamp };
+    const post = { username: nickname, avatar: selectedAvatar, exercise_type: selectedSport.type, exercise_data: ed, mood: selectedMood, is_public: !isPrivate, likes: [], comments: [], created_at: finalTimestamp };
     show('🚀 正在上传云端...');
     await supabase.from('fitmate_posts').insert([post]);
     show('🎉 打卡成功！数据已合流对账');
@@ -434,11 +498,8 @@
   });
 
   $('privacyToggle').onclick = function() { this.classList.toggle('active'); isPrivate = !this.classList.contains('active'); };
-
   $('btnToggleTheme').onclick = () => {
-    let app = $('app');
-    if (currentTheme === 'dark') { currentTheme = 'light'; app.classList.add('light-theme-active'); }
-    else { currentTheme = 'dark'; app.classList.remove('light-theme-active'); }
+    let app = $('app'); if (currentTheme === 'dark') { currentTheme = 'light'; app.classList.add('light-theme-active'); } else { currentTheme = 'dark'; app.classList.remove('light-theme-active'); }
   };
 
   $('btnToggleLang').onclick = () => {
