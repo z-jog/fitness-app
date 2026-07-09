@@ -199,8 +199,8 @@
   let nickname = '', selectedAvatar = '🏃', selectedSport = null, selectedBodyPart = null, selectedMood = '😄', isPrivate = false, currentTheme = 'dark', activeReport = '3.1', currentLang = 'zh';
 
   var I18N_DICT = {
-    zh: { logo_title: "FitMate", logo_sub: "健身打卡 · 遇见更好的自己", select_sport: "🏋️ 选择运动", today_mood: "😊 今日状态", priv_self: "🔒 仅自己可见", priv_all: "🌍 所有人可见", rep_1: "当月时长", rep_2: "当月次数", rep_3: "当月跑步", stat_hours: "终身总时长(分)", stat_times: "终身总打卡(次)", footprint_cal: "👣 运动足迹日历", sys_settings: "⚙️ 账号与系统设置", set_theme: "视觉主题模式", set_lang: "多语言环境", nav_punch: "打卡", nav_circle_l: "圈子", nav_rank: "排行", nav_mine: "我的", date_lbl: "📅 运动日期(可做补打卡)" },
-    en: { logo_title: "FitMate", logo_sub: "Fitness · Meet Better Self", select_sport: "🏋️ Choose Sport", today_mood: "😊 Energy Status", priv_self: "🔒 Private", priv_all: "🌍 Public", rep_1: "M-Duration", rep_2: "M-Workouts", rep_3: "M-Running", stat_hours: "Life Mins", stat_times: "Life Workouts", footprint_cal: "👣 Fitness Footprints", sys_settings: "⚙️ System & Settings", set_theme: "Visual Theme", set_lang: "Language", nav_punch: "Punch", nav_circle_l: "Circle", nav_rank: "Rank", nav_mine: "Me", date_lbl: "📅 Workout Date (Backdating)" }
+    zh: { logo_title: "FitMate", logo_sub: "健身打卡 · 遇见更好的自己", select_sport: "🏋️ 选择运动", today_mood: "😊 今日状态", priv_self: "🔒 仅自己可见", priv_all: "🌍 所有人可见", rep_1: "当月时长", rep_2: "当月次数", rep_3: "当月跑步", stat_hours: "终身总时长(分)", stat_times: "终身总打卡(次)", footprint_cal: "👣 运动足迹日历", sys_settings: "⚙️ 账号与系统设置", set_theme: "视觉主题模式", set_lang: "多语言环境", nav_punch: "打卡", nav_circle_l: "圈子", nav_rank: "排行", nav_mine: "我的", date_lbl: "📅 运动日期(可做补打卡)", streak_txt: "连续" },
+    en: { logo_title: "FitMate", logo_sub: "Fitness · Meet Better Self", select_sport: "🏋️ Choose Sport", today_mood: "😊 Energy Status", priv_self: "🔒 Private", priv_all: "🌍 Public", rep_1: "M-Duration", rep_2: "M-Workouts", rep_3: "M-Running", stat_hours: "Life Mins", stat_times: "Life Workouts", footprint_cal: "👣 Fitness Footprints", sys_settings: "⚙️ System & Settings", set_theme: "Visual Theme", set_lang: "Language", nav_punch: "Punch", nav_circle_l: "Circle", nav_rank: "Rank", nav_mine: "Me", date_lbl: "📅 Workout Date (Backdating)", streak_txt: "Streak" }
   };
 
   const $ = id => document.getElementById(id);
@@ -209,6 +209,43 @@
   function ls(k, d) { try { let v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }
   function lss(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
+  // 🛠️ 连续打卡智能算法 UI 渲染引擎
+  function updateStreakUI() {
+    let savedStreak = ls('fitmate_streak', 0);
+    let savedDate = ls('fitmate_streak_date', '');
+    let todayStr = new Date().toDateString();
+    
+    if (savedDate && savedDate !== todayStr) {
+      let d1 = new Date(savedDate); d1.setHours(0,0,0,0);
+      let d2 = new Date(); d2.setHours(0,0,0,0);
+      let diff = Math.round((d2 - d1) / 86400000);
+      if (diff > 1) { savedStreak = 0; lss('fitmate_streak', 0); } // 超过1天没打，连续记录熔断清零
+    }
+    let txt = I18N_DICT[currentLang]['streak_txt'] || '连续';
+    let unit = currentLang === 'zh' ? '天' : 'Days';
+    $('mainStreakBadge').textContent = `🔥 ${txt} ${savedStreak} ${unit}`;
+  }
+
+  // 🛠️ 触发连续打卡数据进位审计
+  function handleStreakIncrement() {
+    let todayStr = new Date().toDateString();
+    let savedDate = ls('fitmate_streak_date', '');
+    let savedStreak = ls('fitmate_streak', 0);
+    
+    if (savedDate !== todayStr) {
+      let d1 = new Date(savedDate); d1.setHours(0,0,0,0);
+      let d2 = new Date(); d2.setHours(0,0,0,0);
+      let diff = savedDate ? Math.round((d2 - d1) / 86400000) : 999;
+      
+      if (diff === 1) { savedStreak += 1; } // 正好跨越1天，连击+1
+      else { savedStreak = 1; } // 断档或首次打卡，重置为1天
+      
+      lss('fitmate_streak', savedStreak);
+      lss('fitmate_streak_date', todayStr);
+    }
+    updateStreakUI();
+  }
+
   function applyLanguage(lang) {
     currentLang = lang; let d = I18N_DICT[lang];
     var t = (id, k) => { if($(id)) $(id).textContent = d[k]; };
@@ -216,6 +253,7 @@
     let navs = document.querySelectorAll('.bottom-nav .nav-item');
     if(navs.length >= 4) { navs[0].querySelector('.nav-lbl').textContent = d['nav_punch']; navs[1].querySelector('.nav-lbl').textContent = d['nav_circle_l']; navs[2].querySelector('.nav-lbl').textContent = d['nav_rank']; navs[3].querySelector('.nav-lbl').textContent = d['nav_mine']; }
     $('btnToggleLang').textContent = lang === 'zh' ? 'English' : '中文';
+    updateStreakUI();
   }
 
   async function updateNickname() {
@@ -295,7 +333,7 @@
     $('rankList').innerHTML = h || '<div class="text-center text-gray-500 py-6 text-xs">当月暂无动态</div>';
   }
 
-  function switchToMain() { $('auth-screen').classList.add('hidden'); $('main-screen').classList.add('active'); renderSports(); renderCircle(); }
+  function switchToMain() { $('auth-screen').classList.add('hidden'); $('main-screen').classList.add('active'); renderSports(); renderCircle(); updateStreakUI(); }
 
   function renderSports() {
     const grid = $('sportGrid'); grid.innerHTML = '';
@@ -315,7 +353,7 @@
   function buildForm(s) {
     const cont = $('dynamicFormContent'); cont.innerHTML = '';
     if (s.type === 'distance') {
-      cont.innerHTML = `<div class="flex gap-2"><input type="number" class="form-input dur text-xs" placeholder="⏱ 时长 (微时间/分钟)" /><input type="number" class="form-input dist text-xs" placeholder="📏 距离 (公里)" /></div>`;
+      cont.innerHTML = `<div class="flex gap-2"><input type="number" class="form-input dur text-xs" placeholder="⏱ 时长 (分钟)" /><input type="number" class="form-input dist text-xs" placeholder="📏 距离 (公里)" /></div>`;
     } else if (s.type === 'anaerobic') {
       let h = '<div class="body-part-tabs" id="bodyTabs">'; 
       BODY_PARTS.forEach(bp => h += `<div class="body-part-tab" data-part="${bp.id}">${bp.label}</div>`);
@@ -349,85 +387,58 @@
     $('privacyToggle').classList.add('active'); initDatePicker(); validate();
   }
 
-  // 🛠️ 深度连合：完美加载点赞评论流与底层操作面板
   async function renderCircle() {
     $('circleFeed').innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">🌐 正在对账云端动态...</div>';
     const { data } = await supabase.from('fitmate_posts').select('*').order('created_at', { ascending: false }).limit(50);
     if (!data || data.length === 0) return $('circleFeed').innerHTML = '<div class="text-center text-gray-500 py-10 text-xs">暂无动态</div>';
     let h = '';
     data.forEach(p => {
-      let ed = p.exercise_data || {};
-      let likesArr = p.likes || [];
-      let commsArr = p.comments || [];
-      let isLiked = likesArr.indexOf(nickname) !== -1;
-      
+      let ed = p.exercise_data || {}; let likesArr = p.likes || []; let commsArr = p.comments || []; let isLiked = likesArr.indexOf(nickname) !== -1;
       h += `<div class="post-card" data-pid="${p.id}">
         <div class="post-header">
           <div class="post-avatar">${p.avatar||'🏃'}</div>
-          <div>
-            <div class="text-white text-xs font-bold">${p.username}</div>
-            <div class="text-[10px] text-gray-500">${p.created_at.slice(5,16).replace('T',' ')}</div>
-          </div>
+          <div><div class="text-white text-xs font-bold">${p.username}</div><div class="text-[10px] text-gray-500">${p.created_at.slice(5,16).replace('T',' ')}</div></div>
         </div>
         <div class="text-lime-400 text-xs font-bold mb-1">${ed.emoji || '🏋️'} ${ed.name || '运动'}</div>
         <div class="text-gray-300 text-xs">⏱ 时长：${ed.duration || 0} 分钟 ${ed.distance ? `| 📏 距离：${ed.distance} 公里` : ''} ${ed.bodyPart ? `| 🏋️ 部位：${ed.bodyPart}` : ''} | 心情 ${p.mood || '😄'}</div>
-        
         <div class="flex gap-6 mt-3 pt-2 border-t border-gray-600/30 text-xs text-gray-400">
           <div class="cursor-pointer flex items-center gap-1 act-like ${isLiked ? 'text-red-400 font-bold' : ''}"><span>${isLiked ? '❤️' : '🤍'}</span> 点赞 ${likesArr.length}</div>
           <div class="flex items-center gap-1"><span>💬</span> 评论 ${commsArr.length}</div>
         </div>`;
-
       if(commsArr.length > 0) {
         h += `<div class="mt-2 bg-gray-800/40 p-2 rounded-lg flex flex-col gap-1 text-[11px]">`;
-        commsArr.forEach(c => {
-          h += `<div class="text-gray-300"><span class="text-lime-400 font-bold">${c.author}</span>: ${c.text}</div>`;
-        });
+        commsArr.forEach(c => { h += `<div class="text-gray-300"><span class="text-lime-400 font-bold">${c.author}</span>: ${c.text}</div>`; });
         h += `</div>`;
       }
-
       h += `<div class="mt-2 flex gap-2">
         <input class="flex-1 bg-gray-600 rounded-lg p-1.5 text-xs text-white outline-none comm-input" type="text" placeholder="说点什么..." />
         <button class="bg-lime-400 text-gray-900 px-3 py-1 rounded-lg text-xs font-bold btn-send-comm">发送</button>
       </div></div>`;
     });
-    $('circleFeed').innerHTML = h;
-    bindCircleEvents();
+    $('circleFeed').innerHTML = h; bindCircleEvents();
   }
 
-  // 🛠️ 焊接重连：绑定动态点赞和多级评论上传
   function bindCircleEvents() {
     document.querySelectorAll('.post-card').forEach(card => {
       let pid = card.dataset.pid;
       card.querySelector('.act-like').onclick = async () => {
-        const { data } = await supabase.from('fitmate_posts').select('likes').eq('id', pid).single();
-        if(!data) return;
-        let lk = data.likes || [];
-        let idx = lk.indexOf(nickname);
+        const { data } = await supabase.from('fitmate_posts').select('likes').eq('id', pid).single(); if(!data) return;
+        let lk = data.likes || []; let idx = lk.indexOf(nickname);
         if(idx === -1) lk.push(nickname); else lk.splice(idx, 1);
-        await supabase.from('fitmate_posts').update({ likes: lk }).eq('id', pid);
-        renderCircle();
+        await supabase.from('fitmate_posts').update({ likes: lk }).eq('id', pid); renderCircle();
       };
-
       card.querySelector('.btn-send-comm').onclick = async () => {
-        let input = card.querySelector('.comm-input');
-        let val = input.value.trim();
-        if(!val) return;
-        const { data } = await supabase.from('fitmate_posts').select('comments').eq('id', pid).single();
-        if(!data) return;
-        let cm = data.comments || [];
-        cm.push({ id: Date.now(), author: nickname, text: val });
-        await supabase.from('fitmate_posts').update({ comments: cm }).eq('id', pid);
-        input.value = '';
-        renderCircle();
+        let input = card.querySelector('.comm-input'); let val = input.value.trim(); if(!val) return;
+        const { data } = await supabase.from('fitmate_posts').select('comments').eq('id', pid).single(); if(!data) return;
+        let cm = data.comments || []; cm.push({ id: Date.now(), author: nickname, text: val });
+        await supabase.from('fitmate_posts').update({ comments: cm }).eq('id', pid); input.value = ''; renderCircle();
       };
     });
   }
 
-  // 🛠️ 安全解冻日期锁：杜绝全网 Invalid Date 崩溃
   function initDatePicker() {
     const today = new Date(); const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0');
     $('checkinDate').value = `${yyyy}-${mm}-${dd}`;
   }
 
@@ -449,17 +460,18 @@
     if(selectedSport.type === 'distance') ed.distance = dist;
     if(selectedSport.type === 'anaerobic') ed.bodyPart = selectedBodyPart;
     
-    // 🛠️ 采用高内聚的安全切片算法，绝不引发时间轴死锁崩溃
-    let userSelectedDate = $('checkinDate').value; // "YYYY-MM-DD"
-    let parts = userSelectedDate.split('-');
-    let t = new Date();
+    let userSelectedDate = $('checkinDate').value; let parts = userSelectedDate.split('-'); let t = new Date();
     let finalDate = new Date(parts[0], parts[1] - 1, parts[2], t.getHours(), t.getMinutes(), t.getSeconds());
     let finalTimestamp = finalDate.toISOString();
 
     const post = { username: nickname, avatar: selectedAvatar, exercise_type: selectedSport.type, exercise_data: ed, mood: selectedMood, is_public: !isPrivate, likes: [], comments: [], created_at: finalTimestamp };
     show('🚀 正在上传云端...');
     await supabase.from('fitmate_posts').insert([post]);
-    show('🎉 打卡成功！数据已合流对账');
+    
+    // 🛠️ 焊接点通：打卡完成，瞬间呼叫连续打卡天数累计引擎
+    handleStreakIncrement();
+    
+    show('🎉 打卡成功！天数已即时连击');
     resetForm(); renderCircle();
   };
 
@@ -479,13 +491,10 @@
 
   document.querySelectorAll('.nav-item').forEach(item => {
     item.onclick = () => {
-      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
       document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
       let tab = item.dataset.tab; $(`page-${tab}`).classList.add('active');
-      if (tab === 'circle') renderCircle();
-      if (tab === 'rank') renderRankings();
-      if (tab === 'mine') renderPersonalCenter();
+      if (tab === 'circle') renderCircle(); if (tab === 'rank') renderRankings(); if (tab === 'mine') renderPersonalCenter();
     };
   });
 
